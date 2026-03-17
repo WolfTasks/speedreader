@@ -125,13 +125,13 @@ Always-on injection (via `content_scripts`). Handles:
 
 popup.js resolves the active tab ID via `chrome.tabs.query({ active: true, currentWindow: true })` and uses `chrome.tabs.sendMessage(tabId, ...)` to reach `content.js` directly — **not** via background.
 
-- **File upload** — accepts `.txt`, `.docx`, `.pdf`; parses in background.js via an `PARSE_FILE` message to avoid popup context being killed mid-parse:
+- **File upload** — accepts `.txt`, `.docx`, `.pdf`; parsing happens in `popup.js` using vendor libs loaded in `popup.html` (not in background.js — `chrome.runtime.sendMessage` cannot transfer `ArrayBuffer` via JSON serialization):
   - popup.js checks file size first: if >10 MB, shows inline warning "Datei sehr groß – Laden kann dauern" and waits for user confirmation before proceeding
-  - popup.js reads the file as ArrayBuffer and sends `{ type: "PARSE_FILE", fileType, buffer }` to background
-  - background.js performs the parsing using the vendor libraries and responds with the extracted text
-  - `.txt` → `TextDecoder`
-  - `.docx` → `mammoth.extractRawValue(arrayBuffer)`
-  - `.pdf` → `pdfjsLib.getDocument()` → iterate pages → `page.getTextContent()`
+  - `.txt` → `FileReader.readAsText()`
+  - `.docx` → `mammoth.extractRawValue(arrayBuffer)` (mammoth loaded in popup.html)
+  - `.pdf` → `pdfjsLib.getDocument(arrayBuffer)` → iterate pages → `page.getTextContent()` (pdf.js loaded in popup.html)
+  - Extracted plain text string is sent to background via `chrome.runtime.sendMessage({ type: "READ_TEXT", text })`
+  - Trade-off: if the popup is dismissed during a long parse, the operation is aborted. Acceptable given file parsing is typically fast for normal document sizes.
 - **CSS selector input** — text field; "Laden" button calls `chrome.tabs.sendMessage(tabId, { type: "USE_SELECTOR", selector })`
 - **Picker button** — calls `chrome.tabs.sendMessage(tabId, { type: "ACTIVATE_PICKER" })`
 - **Selection button** — calls `chrome.tabs.sendMessage(tabId, { type: "READ_SELECTION" })`
@@ -211,7 +211,7 @@ WPM slider changes apply **from the next word** — the current pending `setTime
 | Emoji / special chars | Treated as single token, no crash |
 | Tab closed before text arrives | Background clears `pendingText` from storage, no error shown |
 | Reader tab opened directly (no text in storage) | Reader shows: "Kein Text empfangen — bitte erneut versuchen" |
-| Popup dismissed during file parse | Parse continues in background.js; if popup reopens it shows completed result; if tab was already opened, proceeds normally |
+| Popup dismissed during file parse | Parse is aborted (popup context is destroyed); user must reopen popup and re-select the file |
 
 ---
 
