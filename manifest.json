@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "SpeedReader",
+  "version": "0.1.0",
+  "description": "Lese Texte schneller mit der RSVP-Methode",
+  "permissions": ["contextMenus", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["vendor/browser-polyfill.min.js", "content.js"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "SpeedReader"
+  }
+}
