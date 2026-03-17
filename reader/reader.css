@@ -67,6 +67,8 @@ body {
   text-align: right;
   flex-shrink: 0;
   color: #9a9aaa;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .orp {
@@ -75,6 +77,8 @@ body {
   flex-shrink: 0;
   color: #e94560;
   font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .after {
@@ -82,6 +86,8 @@ body {
   text-align: left;
   flex-shrink: 0;
   color: #9a9aaa;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 /* ── Controls ── */
