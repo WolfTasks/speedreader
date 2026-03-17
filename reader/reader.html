@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SpeedReader</title>
+  <link rel="stylesheet" href="reader.css">
+</head>
+<body>
+  <div id="reader-container">
+
+    <div id="word-display">
+      <div id="word-wrapper">
+        <span id="word-before" class="word-part before"></span>
+        <span id="word-orp"    class="word-part orp"></span>
+        <span id="word-after"  class="word-part after"></span>
+      </div>
+      <div id="focus-vline"></div>
+    </div>
+
+    <div id="controls">
+      <button id="btn-restart"   title="Neu starten">⏮</button>
+      <button id="btn-playpause" title="Play/Pause (Leertaste)">▶</button>
+      <div id="wpm-control">
+        <label for="wpm-slider">WPM</label>
+        <input type="range" id="wpm-slider" min="100" max="800" step="50" value="250">
+        <span id="wpm-display">250</span>
+      </div>
+      <div id="progress">
+        Wort <span id="word-index">–</span> / <span id="word-total">–</span>
+      </div>
+    </div>
+
+    <div id="done-banner" hidden>
+      <p>Fertig!</p>
+      <button id="btn-done-restart">Neu starten</button>
+    </div>
+
+    <div id="error-banner" hidden>
+      <p>Kein Text empfangen — bitte erneut versuchen.</p>
+    </div>
+
+  </div>
+
+  <script src="../vendor/browser-polyfill.min.js"></script>
+  <script type="module" src="reader.js"></script>
+</body>
+</html>
