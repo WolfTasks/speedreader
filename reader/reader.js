@@ -116,13 +116,12 @@ elWpmSlider.addEventListener('input', () => {
 });
 
 // Bootstrap: request text from background service worker
-document.addEventListener('DOMContentLoaded', () => {
-  chrome.runtime.sendMessage({ type: 'READER_READY' }, (response) => {
-    if (chrome.runtime.lastError || !response?.text) {
-      elError.hidden = false;
-      elControls.hidden = true;
-      return;
-    }
-    initReader(response.text);
-  });
+// ES modules are deferred — DOM is already parsed when this runs
+chrome.runtime.sendMessage({ type: 'READER_READY' }, (response) => {
+  if (chrome.runtime.lastError || !response?.text) {
+    elError.hidden = false;
+    elControls.hidden = true;
+    return;
+  }
+  initReader(response.text);
 });
