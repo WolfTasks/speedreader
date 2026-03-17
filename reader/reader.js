@@ -76,7 +76,7 @@ function initReader(text) {
 
   if (tokens.length === 0) {
     elError.hidden = false;
-    elControls.style.visibility = 'hidden';
+    elControls.hidden = true;
     return;
   }
 
@@ -88,7 +88,7 @@ function initReader(text) {
     elOrp.textContent    = tokens.map(t => t.word).join(' ');
     elAfter.textContent  = '';
     elIndex.textContent  = tokens.length;
-    elControls.style.visibility = 'hidden';
+    elControls.hidden = true;
     document.removeEventListener('keydown', onKeydown);
     return;
   }
@@ -116,11 +116,13 @@ elWpmSlider.addEventListener('input', () => {
 });
 
 // Bootstrap: request text from background service worker
-chrome.runtime.sendMessage({ type: 'READER_READY' }, (response) => {
-  if (chrome.runtime.lastError || !response?.text) {
-    elError.hidden = false;
-    elControls.style.visibility = 'hidden';
-    return;
-  }
-  initReader(response.text);
+document.addEventListener('DOMContentLoaded', () => {
+  chrome.runtime.sendMessage({ type: 'READER_READY' }, (response) => {
+    if (chrome.runtime.lastError || !response?.text) {
+      elError.hidden = false;
+      elControls.hidden = true;
+      return;
+    }
+    initReader(response.text);
+  });
 });
