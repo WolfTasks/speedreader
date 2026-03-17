@@ -95,8 +95,6 @@ async function loadBySelector() {
 
 // ── File section ──
 
-fileLabel.addEventListener('click', () => fileInput.click());
-
 fileInput.addEventListener('change', async () => {
   const file = fileInput.files[0];
   if (!file) return;
