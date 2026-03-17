@@ -35,6 +35,9 @@
     const t3 = tokenize('End!');
     assert('tokenize: "End!" → pauseMultiplier 2 (sentence end overrides long-word check)', t3[0].pauseMultiplier === 2);
 
+    const t7 = tokenize('Extraordinarily!');
+    assert('tokenize: long word (>10 chars) with sentence end → pauseMultiplier 2 (sentence end takes priority)', t7[0].pauseMultiplier === 2);
+
     const t4 = tokenize('   ');
     assert('tokenize: whitespace-only → empty array', t4.length === 0);
 
