@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>SpeedReader</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>SpeedReader</h1>
+    </header>
+
+    <section class="section" id="web-section">
+      <h2>Webseite</h2>
+      <button class="btn-full" id="btn-selection">Markierten Text lesen</button>
+      <button class="btn-full" id="btn-picker">Element auswählen (Picker)</button>
+      <div class="input-row">
+        <input
+          type="text"
+          id="selector-input"
+          placeholder="CSS-Selektor, z.B. article"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button id="btn-selector">Laden</button>
+      </div>
+      <div id="selector-feedback" class="feedback" hidden></div>
+    </section>
+
+    <section class="section" id="file-section">
+      <h2>Datei <span class="hint">(.txt, .docx, .pdf)</span></h2>
+      <label class="file-label" for="file-input">Datei auswählen…</label>
+      <input type="file" id="file-input" accept=".txt,.docx,.pdf" hidden />
+      <div id="file-feedback" class="feedback" hidden></div>
+    </section>
+
+    <div id="global-status" class="feedback" hidden></div>
+  </div>
+
+  <script src="../vendor/browser-polyfill.min.js"></script>
+  <script src="../vendor/mammoth.browser.min.js"></script>
+  <script src="../vendor/pdf.min.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  width: 300px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  background: #1a1a2e;
+  color: #e0e0e0;
+}
+
+#app { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+
+header h1 {
+  font-size: 16px;
+  color: #e94560;
+  letter-spacing: 1px;
+  text-align: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #2a2a4a;
+}
+
+.section h2 {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #666;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.hint { font-size: 11px; text-transform: none; color: #555; }
+
+.btn-full {
+  width: 100%;
+  background: #16213e;
+  color: #e0e0e0;
+  border: 1px solid #2a2a4a;
+  border-radius: 4px;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+  margin-bottom: 6px;
+  transition: background 0.15s;
+}
+.btn-full:hover { background: #0f3460; }
+
+.input-row {
+  display: flex;
+  gap: 6px;
+}
+
+input[type="text"] {
+  flex: 1;
+  background: #16213e;
+  border: 1px solid #2a2a4a;
+  border-radius: 4px;
+  padding: 6px 8px;
+  color: #e0e0e0;
+  font-size: 13px;
+  outline: none;
+}
+input[type="text"]:focus { border-color: #4a90e2; }
+input[type="text"].error { border-color: #e94560; }
+
+#btn-selector {
+  background: #16213e;
+  border: 1px solid #2a2a4a;
+  border-radius: 4px;
+  color: #e0e0e0;
+  padding: 6px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+#btn-selector:hover { background: #0f3460; }
+
+.file-label {
+  display: block;
+  background: #16213e;
+  border: 1px dashed #2a2a4a;
+  border-radius: 4px;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  color: #888;
+  transition: background 0.15s, border-color 0.15s;
+}
+.file-label:hover { background: #0f3460; border-color: #4a90e2; color: #e0e0e0; }
+
+.feedback {
+  font-size: 12px;
+  padding: 4px 0;
+  margin-top: 4px;
+}
+.feedback.error { color: #e94560; }
+.feedback.success { color: #4caf50; }
+.feedback.warning { color: #ff9800; }
