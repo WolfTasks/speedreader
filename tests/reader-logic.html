@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>SpeedReader – Unit Tests</title>
+  <style>
+    body { font-family: monospace; padding: 1rem; background: #1a1a2e; color: #e0e0e0; }
+    .pass { color: #4caf50; }
+    .fail { color: #e94560; font-weight: bold; }
+    summary { cursor: pointer; color: #888; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>SpeedReader – Unit Tests</h1>
+  <div id="output"></div>
+  <script type="module">
+    import { tokenize, getOrpIndex, splitAtOrp } from '../reader/reader-core.js';
+
+    const results = [];
+    function assert(description, condition) {
+      results.push({ description, pass: Boolean(condition) });
+      if (!condition) console.error('FAIL:', description);
+    }
+
+    // --- tokenize ---
+    const t1 = tokenize('Hello, world! Foo');
+    assert('tokenize: 3 tokens from "Hello, world! Foo"', t1.length === 3);
+    assert('tokenize: strips comma → "Hello"', t1[0].word === 'Hello');
+    assert('tokenize: "world!" → pauseMultiplier 2 (sentence end)', t1[1].pauseMultiplier === 2);
+    assert('tokenize: "Foo" → pauseMultiplier 1', t1[2].pauseMultiplier === 1);
+
+    const t2 = tokenize('Extraordinarily');
+    assert('tokenize: 11-char word → pauseMultiplier 1.4', t2[0].pauseMultiplier === 1.4);
+
+    const t3 = tokenize('End!');
+    assert('tokenize: "End!" → pauseMultiplier 2 (sentence end overrides long-word check)', t3[0].pauseMultiplier === 2);
+
+    const t4 = tokenize('   ');
+    assert('tokenize: whitespace-only → empty array', t4.length === 0);
+
+    const t5 = tokenize('');
+    assert('tokenize: empty string → empty array', t5.length === 0);
+
+    const t6 = tokenize('Hello\nworld');
+    assert('tokenize: newline treated as whitespace separator → 2 tokens', t6.length === 2);
+
+    // --- getOrpIndex ---
+    assert('getOrpIndex: 1-char → 0', getOrpIndex('A') === 0);
+    assert('getOrpIndex: 2-char → 0', getOrpIndex('Hi') === 0);
+    assert('getOrpIndex: 3-char → 0  (floor(0.9)-1 = -1 → max 0)', getOrpIndex('the') === 0);
+    assert('getOrpIndex: 5-char → 0  (floor(1.5)-1 = 0)', getOrpIndex('Hello') === 0);
+    assert('getOrpIndex: 7-char → 1  (floor(2.1)-1 = 1)', getOrpIndex('Reading') === 1);
+    assert('getOrpIndex: 10-char → 2  (floor(3.0)-1 = 2)', getOrpIndex('SpeedReads') === 2);
+
+    // --- splitAtOrp ---
+    const s1 = splitAtOrp('A');
+    assert('splitAtOrp 1-char: before=""', s1.before === '');
+    assert('splitAtOrp 1-char: orp="A"', s1.orp === 'A');
+    assert('splitAtOrp 1-char: after=""', s1.after === '');
+
+    const s2 = splitAtOrp('Hi');
+    assert('splitAtOrp 2-char: before=""', s2.before === '');
+    assert('splitAtOrp 2-char: orp="H"', s2.orp === 'H');
+    assert('splitAtOrp 2-char: after="i"', s2.after === 'i');
+
+    const s3 = splitAtOrp('Reading');
+    assert('splitAtOrp "Reading": before="R"', s3.before === 'R');
+    assert('splitAtOrp "Reading": orp="e"', s3.orp === 'e');
+    assert('splitAtOrp "Reading": after="ading"', s3.after === 'ading');
+
+    // Render
+    const out = document.getElementById('output');
+    let passed = 0, failed = 0;
+    for (const r of results) {
+      const div = document.createElement('div');
+      div.className = r.pass ? 'pass' : 'fail';
+      div.textContent = (r.pass ? '✓ ' : '✗ ') + r.description;
+      out.appendChild(div);
+      r.pass ? passed++ : failed++;
+    }
+    const summary = document.createElement('p');
+    summary.style.marginTop = '1rem';
+    summary.style.fontWeight = 'bold';
+    summary.textContent = `${passed} passed, ${failed} failed`;
+    summary.style.color = failed > 0 ? '#e94560' : '#4caf50';
+    out.appendChild(summary);
+  </script>
+</body>
+</html>
