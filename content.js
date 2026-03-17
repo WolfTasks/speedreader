@@ -42,7 +42,7 @@ document.addEventListener('click', (e) => {
 // Escape key: cancel picker
 document.addEventListener('keydown', (e) => {
   if (pickerActive && e.key === 'Escape') exitPicker();
-});
+}, { capture: true });
 
 // Brief highlight helper for CSS selector feedback
 function flashElement(el) {
