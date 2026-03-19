@@ -29,11 +29,11 @@ Rein CSS-seitige Änderungen in `reader/reader.css`. Keine JavaScript-Änderunge
 | `#reader-container` | `max-width` | `640px` | `800px` |
 | `#word-display` | `width` | `540px` | `740px` |
 | `#word-wrapper` | `font-size` | `2.4rem` | `1.8rem` |
-| `.before` | `width` | `250px` | `350px` |
-| `.after` | `width` | `250px` | `350px` |
-| `#focus-vline` | `left` | `260px` | `360px` |
+| `.before` | `width` | `250px` | `360px` |
+| `.after` | `width` | `250px` | `360px` |
+| `#focus-vline` | `left` | `260px` | `370px` |
 
-**ORP-Lineal-Berechnung:** `.before` (350px) + halbe `.orp`-Spalte (10px) = 360px. Die `.orp`-Spaltenbreite (20px) bleibt unverändert.
+**ORP-Lineal-Berechnung:** `.before` (360px) + halbe `.orp`-Spalte (10px) = 370px. Die `.orp`-Spaltenbreite (20px) bleibt unverändert. Die Spaltensumme 360 + 20 + 360 = 740px entspricht exakt der Container-Breite — kein horizontaler Versatz durch `justify-content: center`.
 
 ### Was sich nicht ändert
 
@@ -80,6 +80,8 @@ Inhalt: Die Extension sammelt keine persönlichen Daten. Texte werden ausschlie�
 Wird via GitHub Pages veröffentlicht unter:
 `https://<username>.github.io/speedreader/docs/privacy-policy.html`
 
+> **Hinweis:** Der Quellcode liegt auf Gitea. GitHub Pages dient ausschließlich als kostenloser statischer Hosting-Dienst für die Privacy Policy URL — der Chrome Web Store verlangt eine öffentlich erreichbare HTTPS-URL, GitHub Pages stellt diese bereit ohne eigene Infrastruktur.
+
 > **Manueller Schritt:** GitHub Pages in den Repository-Einstellungen aktivieren (Branch `main`, Ordner `/docs` oder `/`).
 
 ### 2.3 Store-Texte
@@ -87,9 +89,12 @@ Wird via GitHub Pages veröffentlicht unter:
 **Neue Datei:** `docs/store-listing.md`
 
 Enthält:
-- **Kurzbezeichnung** (≤132 Zeichen, DE)
-- **Ausführliche Beschreibung** (DE) mit Erklärung der RSVP-Methode, Funktionsumfang, Hinweis zu `<all_urls>`-Berechtigung
-- **Begründung für `<all_urls>`** (für das Store-Review-Formular): Die Extension liest markierten Text von beliebigen Webseiten via Content Script — dies erfordert Zugriff auf alle URLs.
+- **Kurzbezeichnung** (≤132 Zeichen, DE) — wird im Dashboard als eigenes Feld "Short description" eingetragen, zusätzlich zur langen Beschreibung
+- **Ausführliche Beschreibung** (DE) mit Erklärung der RSVP-Methode, Funktionsumfang
+- **Kategorie:** Productivity
+- **Begründung für `<all_urls>`** — wird im Chrome Web Store Submission-Formular als "Single-purpose justification" in ein eigenes Textfeld eingefügt: *"The extension injects a content script to capture selected text and activated element text from any webpage the user is viewing. Access to all URLs is required because the user can invoke the reader on any website."*
+- **Screenshot-Hinweis:** Mindestens 1 Screenshot erforderlich, genau 1280×800 oder 640×400 Pixel (keine anderen Maße). Empfohlene Inhalte: Reader in Aktion (Wort wird angezeigt), Popup mit Optionen. Bis zu 5 Screenshots möglich.
+- **Promotional Tile (optional):** 440×280 PNG — wird für Featured-Platzierungen benötigt, sonst optional.
 
 ### 2.4 Gitea Build-Workflow
 
@@ -102,7 +107,7 @@ Schritte:
 2. ZIP erstellen — enthält alle Extension-Dateien **außer**: `.git/`, `.gitea/`, `.idea/`, `docs/`, `tests/`, `*.md`
 3. ZIP als Gitea Actions Artifact hochladen (manuell downloadbar aus dem Workflow-Run)
 
-ZIP-Name: `speedreader-<version>.zip` (Version aus `manifest.json` ausgelesen)
+ZIP-Name: `speedreader-<version>.zip` (Version aus `manifest.json` ausgelesen via `node -e "console.log(require('./manifest.json').version)"` — Node.js wird auf dem Runner vorausgesetzt)
 
 ---
 
@@ -110,7 +115,7 @@ ZIP-Name: `speedreader-<version>.zip` (Version aus `manifest.json` ausgelesen)
 
 | Schritt | Wer | Wann |
 |---|---|---|
-| Screenshots erstellen (1280×800 oder 640×400) | Nutzer | Vor Store-Einreichung |
+| Screenshots erstellen (exakt 1280×800 oder 640×400 px, min. 1, max. 5) | Nutzer | Vor Store-Einreichung |
 | GitHub Pages aktivieren | Nutzer | Vor Store-Einreichung |
 | Chrome Web Store Developer Account anlegen ($5) | Nutzer | Einmalig |
 | ZIP aus Gitea herunterladen und im Store einreichen | Nutzer | Bei jedem Release |
