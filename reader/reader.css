@@ -16,14 +16,14 @@ body {
   align-items: center;
   gap: 2rem;
   width: 100%;
-  max-width: 640px;
+  max-width: 808px;
   padding: 2rem;
 }
 
 /* ── Word display ── */
 #word-display {
   position: relative;
-  width: 540px;
+  width: 740px;
   height: 100px;
   background: #16213e;
   border-radius: 8px;
@@ -46,8 +46,8 @@ body {
 #focus-vline {
   position: absolute;
   top: 0; bottom: 0;
-  /* ORP column starts at 250px from left; center of 20px ORP col = 260px */
-  left: 260px;
+  /* ORP column starts at 360px from left; center of 20px ORP col = 370px */
+  left: 370px;
   width: 1px;
   background: rgba(233,69,96,0.25);
   pointer-events: none;
@@ -57,13 +57,13 @@ body {
 #word-wrapper {
   display: flex;
   align-items: baseline;
-  font-size: 2.4rem;
+  font-size: 1.8rem;
   line-height: 1;
   user-select: none;
 }
 
 .before {
-  width: 250px;
+  width: 360px;
   text-align: right;
   flex-shrink: 0;
   color: #9a9aaa;
@@ -82,7 +82,7 @@ body {
 }
 
 .after {
-  width: 250px;
+  width: 360px;
   text-align: left;
   flex-shrink: 0;
   color: #9a9aaa;
