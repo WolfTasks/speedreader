@@ -1,0 +1,38 @@
+name: Build Extension ZIP
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get version from manifest
+        id: version
+        run: |
+          VERSION=$(node -e "console.log(require('./manifest.json').version)")
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Create ZIP
+        run: |
+          zip -r "speedreader-${{ steps.version.outputs.version }}.zip" . \
+            -x ".git/*" \
+            -x ".gitea/*" \
+            -x ".idea/*" \
+            -x "docs/*" \
+            -x "tests/*" \
+            -x "*.md" \
+            -x "icons/generate-pngs.html" \
+            -x "icons/icon.svg"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: speedreader-${{ steps.version.outputs.version }}
+          path: speedreader-${{ steps.version.outputs.version }}.zip
+          retention-days: 30
