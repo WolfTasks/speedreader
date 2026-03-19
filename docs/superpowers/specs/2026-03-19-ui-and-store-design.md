@@ -26,14 +26,16 @@ Rein CSS-seitige Änderungen in `reader/reader.css`. Keine JavaScript-Änderunge
 
 | CSS-Selektor | Eigenschaft | Alt | Neu |
 |---|---|---|---|
-| `#reader-container` | `max-width` | `640px` | `800px` |
+| `#reader-container` | `max-width` | `640px` | `808px` |
 | `#word-display` | `width` | `540px` | `740px` |
 | `#word-wrapper` | `font-size` | `2.4rem` | `1.8rem` |
 | `.before` | `width` | `250px` | `360px` |
 | `.after` | `width` | `250px` | `360px` |
 | `#focus-vline` | `left` | `260px` | `370px` |
 
-**ORP-Lineal-Berechnung:** `.before` (360px) + halbe `.orp`-Spalte (10px) = 370px. Die `.orp`-Spaltenbreite (20px) bleibt unverändert. Die Spaltensumme 360 + 20 + 360 = 740px entspricht exakt der Container-Breite — kein horizontaler Versatz durch `justify-content: center`.
+**ORP-Lineal-Berechnung:** `.before` (360px) + halbe `.orp`-Spalte (10px) = 370px. Die `.orp`-Spaltenbreite (20px) bleibt unverändert. Die Spaltensumme 360 + 20 + 360 = 740px entspricht exakt der `#word-display`-Breite — kein horizontaler Versatz durch `justify-content: center`. (Nebenbei behebt dies einen bestehenden Defekt: die aktuellen Werte 250 + 20 + 250 = 520px ≠ 540px, der einen unsichtbaren 20px-Versatz erzeugt.)
+
+**Padding-Rechnung:** `#reader-container` hat `padding: 2rem` (= 32px je Seite bei 16px Basis). Daher muss `max-width` mindestens 740 + 64 = 804px betragen. Der Spec setzt 808px für etwas Spielraum.
 
 ### Was sich nicht ändert
 
@@ -80,9 +82,9 @@ Inhalt: Die Extension sammelt keine persönlichen Daten. Texte werden ausschlie�
 Wird via GitHub Pages veröffentlicht unter:
 `https://<username>.github.io/speedreader/docs/privacy-policy.html`
 
-> **Hinweis:** Der Quellcode liegt auf Gitea. GitHub Pages dient ausschließlich als kostenloser statischer Hosting-Dienst für die Privacy Policy URL — der Chrome Web Store verlangt eine öffentlich erreichbare HTTPS-URL, GitHub Pages stellt diese bereit ohne eigene Infrastruktur.
+> **Hinweis:** Der Quellcode liegt auf Gitea. GitHub Pages dient ausschließlich als kostenloser statischer Hosting-Dienst für die Privacy Policy URL — der Chrome Web Store verlangt eine öffentlich erreichbare HTTPS-URL, GitHub Pages stellt diese bereit ohne eigene Infrastruktur. Dafür muss ein separates öffentliches Repository auf GitHub angelegt und der `docs/`-Ordner dort manuell gepusht (oder gespiegelt) werden.
 
-> **Manueller Schritt:** GitHub Pages in den Repository-Einstellungen aktivieren (Branch `main`, Ordner `/docs` oder `/`).
+> **Manueller Schritt:** GitHub Pages in den Repository-Einstellungen des GitHub-Repos aktivieren (Branch `main`, Ordner `/docs`).
 
 ### 2.3 Store-Texte
 
