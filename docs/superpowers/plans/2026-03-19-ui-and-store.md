@@ -4,7 +4,7 @@
 
 **Goal:** Wortanzeige verbreitern + Schrift verkleinern, und alle Dateien für die Chrome Web Store Veröffentlichung erstellen (Icons, Privacy Policy, Store-Texte, Gitea Build-Workflow).
 
-**Architecture:** Task 1 ist ein reines CSS-Edit. Tasks 2–5 erstellen neue Dateien für Store-Readiness. Alle Tasks sind unabhängig voneinander und können in beliebiger Reihenfolge ausgeführt werden, ausser Task 2 (Icons) muss vor Task 2b (manifest.json) abgeschlossen sein.
+**Architecture:** Task 1 ist ein reines CSS-Edit. Tasks 2–5 erstellen neue Dateien für Store-Readiness. Alle Tasks sind unabhängig voneinander und können in beliebiger Reihenfolge ausgeführt werden, ausser dass innerhalb Task 2 die Schritte 1–3 (SVG + PNG-Export) vor Schritt 4 (manifest.json) abgeschlossen sein müssen.
 
 **Tech Stack:** Vanilla CSS, SVG, HTML, JSON, YAML (Gitea Actions)
 
@@ -84,7 +84,7 @@ In `reader/reader.css` folgende 6 Werte ändern:
    - Box ist breiter als vorher
    - Schrift ist kleiner als vorher
    - Rote ORP-Linie steht exakt unter dem hervorgehobenen Buchstaben (nicht daneben)
-   - Lange Wörter (z.B. "Bundesverfassungsgericht") werden nicht mehr abgeschnitten
+   - Lange Wörter (z.B. "Bundesverfassungsgericht") haben deutlich mehr Platz (die Spalten sind 360px statt 250px breit; sehr lange Wörter werden am Spaltenrand noch immer durch `overflow: hidden` beschnitten — das ist erwartetes Verhalten)
 
 - [ ] **Schritt 3: Unit-Tests prüfen**
 
@@ -148,9 +148,19 @@ Neue Datei `icons/generate-pngs.html` (wird nicht in den Store deployed):
   <div id="previews"></div>
 
   <script>
+    // SVG inline als String — vermeidet Canvas-Taint-Fehler bei file://-Protokoll
+    const SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="16" fill="#1a1a2e"/>
+  <text font-family="'Arial Black', Arial, sans-serif" font-size="68" font-weight="900" y="90">
+    <tspan x="8" fill="#e94560">S</tspan><tspan fill="#e0e0e0">R</tspan>
+  </text>
+</svg>`;
+
     const SIZES = [16, 48, 128];
 
     function generate() {
+      const blob = new Blob([SVG], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
       const img = new Image();
       img.onload = () => {
         const previews = document.getElementById('previews');
@@ -171,16 +181,17 @@ Neue Datei `icons/generate-pngs.html` (wird nicht in den Store deployed):
           previews.appendChild(box);
 
           // Download auslösen
-          canvas.toBlob(blob => {
+          canvas.toBlob(pngBlob => {
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
+            a.href = URL.createObjectURL(pngBlob);
             a.download = `icon-${size}.png`;
             a.click();
             setTimeout(() => URL.revokeObjectURL(a.href), 1000);
           }, 'image/png');
         });
+        URL.revokeObjectURL(url);
       };
-      img.src = 'icon.svg';
+      img.src = url;
     }
   </script>
 </body>
@@ -189,7 +200,7 @@ Neue Datei `icons/generate-pngs.html` (wird nicht in den Store deployed):
 
 - [ ] **Schritt 3: PNGs generieren**
 
-1. `icons/generate-pngs.html` im Browser öffnen (Doppelklick auf die Datei)
+1. `icons/generate-pngs.html` im Browser öffnen — Doppelklick auf die Datei funktioniert (das SVG ist inline eingebettet, kein Netzwerkzugriff nötig)
 2. "PNGs generieren & herunterladen" klicken
 3. Drei Downloads erscheinen: `icon-16.png`, `icon-48.png`, `icon-128.png`
 4. Alle drei Dateien in den `icons/`-Ordner des Projekts verschieben
@@ -444,12 +455,12 @@ jobs:
             -x ".idea/*" \
             -x "docs/*" \
             -x "tests/*" \
-            -x "CLAUDE.md" \
+            -x "*.md" \
             -x "icons/generate-pngs.html" \
             -x "icons/icon.svg"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: speedreader-${{ steps.version.outputs.version }}
           path: speedreader-${{ steps.version.outputs.version }}.zip
