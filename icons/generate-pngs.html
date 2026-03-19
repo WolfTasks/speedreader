@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Icon-Generator</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #f0f0f0; }
+    button { padding: 0.5rem 1.5rem; font-size: 1rem; cursor: pointer; margin-top: 1rem; }
+    #previews { display: flex; gap: 2rem; align-items: flex-end; margin: 1rem 0; }
+    .preview-box { text-align: center; }
+    .preview-box canvas { display: block; border: 1px solid #ccc; background: #fff; }
+  </style>
+</head>
+<body>
+  <h1>SpeedReader Icon Generator</h1>
+  <p>Klicke "Generieren" — die drei PNGs werden automatisch heruntergeladen.<br>
+     Verschiebe sie danach in den <code>icons/</code>-Ordner des Projekts.</p>
+  <button onclick="generate()">PNGs generieren &amp; herunterladen</button>
+  <div id="previews"></div>
+
+  <script>
+    // SVG inline als String — vermeidet Canvas-Taint-Fehler bei file://-Protokoll
+    const SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="16" fill="#1a1a2e"/>
+  <text font-family="'Arial Black', Arial, sans-serif" font-size="68" font-weight="900" y="90">
+    <tspan x="8" fill="#e94560">S</tspan><tspan fill="#e0e0e0">R</tspan>
+  </text>
+</svg>`;
+
+    const SIZES = [16, 48, 128];
+
+    function generate() {
+      const blob = new Blob([SVG], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        const previews = document.getElementById('previews');
+        previews.innerHTML = '';
+        SIZES.forEach(size => {
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, size, size);
+
+          // Preview anzeigen
+          const box = document.createElement('div');
+          box.className = 'preview-box';
+          box.appendChild(canvas);
+          box.appendChild(document.createElement('br'));
+          box.appendChild(document.createTextNode(`${size}×${size}`));
+          previews.appendChild(box);
+
+          // Download auslösen
+          canvas.toBlob(pngBlob => {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(pngBlob);
+            a.download = `icon-${size}.png`;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+          }, 'image/png');
+        });
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    }
+  </script>
+</body>
+</html>

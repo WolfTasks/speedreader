@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="16" fill="#1a1a2e"/>
+  <text font-family="'Arial Black', Arial, sans-serif" font-size="68" font-weight="900" y="90">
+    <tspan x="8" fill="#e94560">S</tspan><tspan fill="#e0e0e0">R</tspan>
+  </text>
+</svg>
