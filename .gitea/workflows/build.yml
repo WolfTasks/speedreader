@@ -28,7 +28,9 @@ jobs:
             -x "tests/*" \
             -x "*.md" \
             -x "icons/generate-pngs.html" \
-            -x "icons/icon.svg"
+            -x "icons/generate-icons.js" \
+            -x "icons/icon.svg" \
+            -x ".claude/*"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

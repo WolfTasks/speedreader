@@ -4,3 +4,5 @@ Thumbs.db
 .idea/
 node_modules/
 *.zip
+.claude/
+icons/generate-icons.js
