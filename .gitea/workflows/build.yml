@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: linux-x64
 
     steps:
       - name: Checkout
@@ -15,7 +15,7 @@ jobs:
       - name: Get version from manifest
         id: version
         run: |
-          VERSION=$(node -e "console.log(require('./manifest.json').version)")
+          VERSION=$(python3 -c "import json; print(json.load(open('manifest.json'))['version'])")
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Create ZIP
@@ -33,7 +33,7 @@ jobs:
             -x ".claude/*"
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: speedreader-${{ steps.version.outputs.version }}
           path: speedreader-${{ steps.version.outputs.version }}.zip
