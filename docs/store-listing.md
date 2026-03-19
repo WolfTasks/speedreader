@@ -9,7 +9,7 @@ Productivity
 
 SpeedReader zeigt Texte Wort für Wort mit der RSVP-Methode — schneller lesen mit optimalem Fokuspunkt.
 
-*(92 Zeichen)*
+*(102 Zeichen)*
 
 ---
 
