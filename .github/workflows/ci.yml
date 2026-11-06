@@ -66,6 +66,7 @@ jobs:
             -x "docs/*" \
             -x "tests/*" \
             -x "*.md" \
+            -x ".gitignore" \
             -x "portainer-stack.yml" \
             -x "icons/generate-pngs.html" \
             -x "icons/generate-icons.js" \
