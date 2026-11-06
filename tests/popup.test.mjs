@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadPopup, fakeFile, fakePdfjs, fakeMammoth } from './helpers/fake-popup-dom.mjs';
+import { buildZip } from './helpers/zip-builder.mjs';
 
 const plain = (o) => JSON.parse(JSON.stringify(o));
 
@@ -173,20 +174,43 @@ test('file: .pdf without extractable text reports scan-PDF error', async () => {
   assert.equal(p.el['file-input'].value, '');
 });
 
-test('file: .docx is extracted via mammoth.extractRawText', { todo: 'BUG: popup.js calls mammoth.extractRawValue, which does not exist in vendor/mammoth.browser.min.js (only extractRawText) → every .docx upload fails' }, async () => {
+const smallDocx = () => buildZip([{ name: 'word/document.xml', data: '<w:document/>' }]);
+
+test('file: .docx is extracted via mammoth.extractRawText', async () => {
   const mammoth = fakeMammoth('Word-Inhalt');
   const p = loadPopup({ mammoth });
-  await p.upload(fakeFile('brief.docx', 'PK...'));
+  await p.upload(fakeFile('brief.docx', smallDocx()));
   assert.equal(mammoth.calls.length, 1);
   assert.ok('arrayBuffer' in mammoth.calls[0]);
   assert.equal(p.runtimeMessages[0]?.text, 'Word-Inhalt');
+  assert.equal(p.closed, 1);
 });
 
-test('file: .docx currently fails with an error message (documents the extractRawValue bug)', async () => {
-  const p = loadPopup({ mammoth: fakeMammoth('Word-Inhalt') });
-  await p.upload(fakeFile('brief.docx', 'PK...'));
-  assert.match(p.el['file-feedback'].textContent, /^Fehler: .*extractRawValue/);
+test('file: .docx unpacking to exactly 50 MB is still accepted', async () => {
+  const mammoth = fakeMammoth('ok');
+  const p = loadPopup({ mammoth });
+  const zip = buildZip([{ name: 'word/document.xml', data: 'x', declaredSize: 50 * 1024 * 1024 }]);
+  await p.upload(fakeFile('grenze.docx', zip));
+  assert.equal(mammoth.calls.length, 1);
+});
+
+test('file: .docx zip bomb (> 50 MB unpacked) is rejected before mammoth runs', async () => {
+  const mammoth = fakeMammoth('nie');
+  const p = loadPopup({ mammoth });
+  const bomb = buildZip([{ name: 'word/document.xml', data: new Uint8Array(60 * 1024 * 1024) }]);
+  await p.upload(fakeFile('bombe.docx', bomb));
+  assert.equal(mammoth.calls.length, 0);
+  assert.equal(p.el['file-feedback'].textContent, 'Fehler: .docx ist entpackt zu groß (60.0 MB, max. 50.0 MB)');
   assert.equal(p.runtimeMessages.length, 0);
+  assert.equal(p.el['file-input'].value, '');
+});
+
+test('file: .docx that is not a ZIP archive is rejected with a clear message', async () => {
+  const mammoth = fakeMammoth('nie');
+  const p = loadPopup({ mammoth });
+  await p.upload(fakeFile('kaputt.docx', 'PK... not a zip'));
+  assert.equal(mammoth.calls.length, 0);
+  assert.match(p.el['file-feedback'].textContent, /^Fehler: Ungültige \.docx-Datei/);
 });
 
 test('file: legacy .doc asks for .docx', async () => {
@@ -205,27 +229,30 @@ test('file: unsupported extension is rejected', async () => {
   assert.equal(p.el['file-input'].value, '');
 });
 
-test('file: exactly 10 MB loads without confirmation', async () => {
+test('file: exactly 20 MB loads (limit is inclusive) without any confirm dialog', async () => {
   const p = loadPopup();
-  await p.upload(fakeFile('big.txt', 'text', { size: 10 * 1024 * 1024 }));
+  await p.upload(fakeFile('big.txt', 'text', { size: 20 * 1024 * 1024 }));
   assert.equal(p.confirms.length, 0);
   assert.equal(p.runtimeMessages.length, 1);
 });
 
-test('file: > 10 MB asks for confirmation with size in MB, proceeds when confirmed', async () => {
+test('file: > 20 MB is rejected hard with size in MB, nothing is read', async () => {
   const p = loadPopup({ confirmResult: true });
-  await p.upload(fakeFile('big.txt', 'text', { size: 15.5 * 1024 * 1024 }));
-  assert.equal(p.confirms.length, 1);
-  assert.match(p.confirms[0], /15\.5 MB/);
-  assert.equal(p.runtimeMessages.length, 1);
-});
-
-test('file: > 10 MB cancelled → nothing is read, input reset', async () => {
-  const p = loadPopup({ confirmResult: false });
-  await p.upload(fakeFile('big.txt', 'text', { size: 11 * 1024 * 1024 }));
+  await p.upload(fakeFile('big.pdf', '%PDF', { size: 25.5 * 1024 * 1024 }));
+  assert.equal(p.confirms.length, 0, 'no confirm() bypass any more');
+  assert.equal(p.el['file-feedback'].textContent, 'Datei zu groß (25.5 MB). Maximal 20.0 MB erlaubt.');
+  assert.equal(p.el['file-feedback'].className, 'feedback error');
+  assert.equal(p.pdfjsLib.calls.length, 0);
   assert.equal(p.runtimeMessages.length, 0);
   assert.equal(p.el['file-input'].value, '');
-  assert.equal(p.el['file-feedback'].hidden, true);
+});
+
+test('file: size limit applies to every format (.docx just above 20 MB)', async () => {
+  const mammoth = fakeMammoth('nie');
+  const p = loadPopup({ mammoth });
+  await p.upload(fakeFile('gross.docx', smallDocx(), { size: 20 * 1024 * 1024 + 1 }));
+  assert.equal(mammoth.calls.length, 0);
+  assert.match(p.el['file-feedback'].textContent, /^Datei zu groß/);
 });
 
 test('file: empty/whitespace-only file → "Datei enthält keinen lesbaren Text."', async () => {

@@ -43,7 +43,8 @@ class FakeFileReader {
     this.#finish(file.content);
   }
   readAsArrayBuffer(file) {
-    this.#finish(new TextEncoder().encode(file.content).buffer);
+    const bytes = file.content instanceof Uint8Array ? file.content : new TextEncoder().encode(file.content);
+    this.#finish(bytes.slice().buffer);
   }
   #finish(result) {
     setTimeout(() => {
@@ -133,8 +134,10 @@ export function loadPopup({
     confirm: (msg) => { confirms.push(msg); return confirmResult; },
   };
 
+  // popup.html loads zip-guard.js before popup.js; expose its global the same way.
+  const { getZipUncompressedSize } = loadScript('popup/zip-guard.js', {});
   loadScript('popup/popup.js', {
-    chrome, document, window, FileReader: FakeFileReader, TextEncoder, pdfjsLib, mammoth,
+    chrome, document, window, FileReader: FakeFileReader, TextEncoder, pdfjsLib, mammoth, getZipUncompressedSize,
   });
 
   return {
