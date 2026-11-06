@@ -1,0 +1,109 @@
+name: Nightly security scan
+
+on:
+  schedule:
+    - cron: '7 3 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/nightly-security.yml'
+      - '.github/scripts/**'
+      - 'vendor/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # vendor/*.min.js are invisible to Dependabot/Trivy (no package manager by design),
+  # so they are checked against OSV via the inventory in vendor/VENDOR.json.
+  vendor-cves:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1   # v7.1.0
+        with:
+          node-version: 24
+
+      - name: Test the scanner
+        run: node --test ".github/scripts/*.test.mjs"
+
+      # Exit 1 = HIGH/CRITICAL (or unknown severity), 2 = stale inventory / OSV unreachable
+      - name: Check vendored libraries against OSV
+        run: node .github/scripts/check-vendor-cves.mjs --sarif vendor-cves.sarif
+
+      - name: Upload SARIF
+        if: always() && hashFiles('vendor-cves.sarif') != ''
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066   # v4.39.3
+        with:
+          sarif_file: vendor-cves.sarif
+          category: vendor-cves
+
+  trivy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+
+      - name: Trivy filesystem scan (secrets + misconfig, gate HIGH,CRITICAL)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25   # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: secret,misconfig
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          # Without this the SARIF covers all severities and the exit-code fires on MEDIUM/LOW too.
+          limit-severities-for-sarif: true
+          format: sarif
+          output: trivy-fs.sarif
+
+      - name: Upload SARIF
+        if: always() && hashFiles('trivy-fs.sarif') != ''
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066   # v4.39.3
+        with:
+          sarif_file: trivy-fs.sarif
+          category: trivy-fs
+
+  # Nightly/manual runs only: keep ONE open issue up to date instead of opening a new one every night.
+  report:
+    needs: [vendor-cves, trivy]
+    if: failure() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update security issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Nightly security scan: Funde"
+          body="Der nächtliche Security-Scan ist fehlgeschlagen ($(date -u +%F)).
+
+          - Vendor-CVEs (OSV): ${{ needs.vendor-cves.result }}
+          - Trivy (Secrets/Misconfig): ${{ needs.trivy.result }}
+
+          Details: ${RUN_URL} (Step-Summary) und Security-Tab → Code scanning (Kategorien \`vendor-cves\`, \`trivy-fs\`)."
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$title\" in:title" --json number -q '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "$body"
+          else
+            gh label create security --repo "$GITHUB_REPOSITORY" --color B60205 --description "Security findings" 2>/dev/null || true
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --label security --body "$body"
+          fi
