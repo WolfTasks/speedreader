@@ -91,6 +91,7 @@ export function fakeMammoth(text = '') {
 /**
  * Load popup.js with fakes. contentResponse: value or function(message) returned by
  * chrome.tabs.sendMessage; set tab to null to simulate no active tab.
+ * pdfjsLib: null = global absent (pdf-loader.mjs module not loaded yet).
  */
 export function loadPopup({
   contentResponse = { ok: true },
@@ -137,7 +138,8 @@ export function loadPopup({
   // popup.html loads zip-guard.js before popup.js; expose its global the same way.
   const { getZipUncompressedSize } = loadScript('popup/zip-guard.js', {});
   loadScript('popup/popup.js', {
-    chrome, document, window, FileReader: FakeFileReader, TextEncoder, pdfjsLib, mammoth, getZipUncompressedSize,
+    chrome, document, window, FileReader: FakeFileReader, TextEncoder, mammoth, getZipUncompressedSize,
+    ...(pdfjsLib === null ? {} : { pdfjsLib }),
   });
 
   return {
