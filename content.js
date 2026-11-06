@@ -21,7 +21,7 @@ function exitPicker() {
 
 // Hover: highlight element under cursor
 document.addEventListener('mouseover', (e) => {
-  if (!pickerActive) return;
+  if (!pickerActive || !e.isTrusted) return;
   if (hoveredEl) hoveredEl.style.outline = '';
   hoveredEl = e.target;
   hoveredEl.style.outline = OUTLINE;
@@ -29,7 +29,8 @@ document.addEventListener('mouseover', (e) => {
 
 // Click: extract text from picked element
 document.addEventListener('click', (e) => {
-  if (!pickerActive) return;
+  // Ignore synthetic events dispatched by page scripts
+  if (!pickerActive || !e.isTrusted) return;
   e.preventDefault();
   e.stopPropagation();
   const text = (e.target.innerText || '').trim();
@@ -41,7 +42,7 @@ document.addEventListener('click', (e) => {
 
 // Escape key: cancel picker
 document.addEventListener('keydown', (e) => {
-  if (pickerActive && e.key === 'Escape') exitPicker();
+  if (pickerActive && e.isTrusted && e.key === 'Escape') exitPicker();
 }, { capture: true });
 
 // Brief highlight helper for CSS selector feedback
@@ -51,8 +52,10 @@ function flashElement(el) {
   setTimeout(() => { el.style.outline = prev; }, 800);
 }
 
-// Message handler from popup.js
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+// Message handler from popup.js — only accept messages from this extension
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (sender?.id !== chrome.runtime.id) return false;
+
   if (message.type === 'ACTIVATE_PICKER') {
     enterPicker();
     sendResponse({ ok: true });

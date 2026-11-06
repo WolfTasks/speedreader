@@ -30,7 +30,9 @@ export function createFakeChrome({ sessionBroken = false } = {}) {
     createdMenus,
     sentMessages,
     runtime: {
+      id: 'test-id',
       onInstalled: createEvent(),
+      onStartup: createEvent(),
       onMessage: createEvent(),
       getURL: (path) => `chrome-extension://test-id/${path}`,
       sendMessage: (msg) => { sentMessages.push(msg); },
@@ -52,13 +54,13 @@ export function createFakeChrome({ sessionBroken = false } = {}) {
 /**
  * Dispatch a runtime message the way Chrome does and resolve with the
  * value passed to sendResponse (or undefined if the listener answered synchronously
- * without responding).
+ * without responding). `sender` defaults to this extension; pass another id to simulate a foreign sender.
  */
-export function sendRuntimeMessage(chrome, message) {
+export function sendRuntimeMessage(chrome, message, sender = { id: chrome.runtime.id }) {
   return new Promise((resolve) => {
     let keepOpen = false;
     for (const fn of chrome.runtime.onMessage.listeners) {
-      const ret = fn(message, {}, resolve);
+      const ret = fn(message, sender, resolve);
       if (ret === true) keepOpen = true;
     }
     if (!keepOpen) setTimeout(() => resolve(undefined), 0);
