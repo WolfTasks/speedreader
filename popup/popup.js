@@ -15,11 +15,8 @@ const fileLabel         = document.querySelector('.file-label');
 const fileFeedback      = document.getElementById('file-feedback');
 const globalStatus      = document.getElementById('global-status');
 
-// Configure pdf.js worker path (must be an extension-internal URL)
-if (typeof pdfjsLib !== 'undefined') {
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    chrome.runtime.getURL('vendor/pdf.worker.min.js');
-}
+// pdf.js (ES module) is loaded and its worker path configured by pdf-loader.mjs,
+// which exposes the API as the global `pdfjsLib`.
 
 // ── Helpers ──
 
@@ -189,7 +186,9 @@ function readAsArrayBuffer(file) {
 }
 
 async function extractPdfText(arrayBuffer) {
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  if (typeof pdfjsLib === 'undefined') throw new Error('PDF-Bibliothek nicht geladen');
+  // isEvalSupported: false — never compile font code via eval/new Function (defense in depth).
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise;
   const pageTexts = [];
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);

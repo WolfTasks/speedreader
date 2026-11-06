@@ -8,13 +8,14 @@ const plain = (o) => JSON.parse(JSON.stringify(o));
 
 // ── Setup ──
 
-test('pdf.js worker path is set to the extension-internal URL', () => {
+// Worker configuration moved to popup/pdf-loader.mjs (pdf.js ≥ 4 is ESM-only); covered by manifest.test.mjs.
+test('popup.js leaves the pdf.js worker path to the module shim', () => {
   const p = loadPopup();
-  assert.equal(p.pdfjsLib.GlobalWorkerOptions.workerSrc, 'chrome-extension://test-id/vendor/pdf.worker.min.js');
+  assert.equal(p.pdfjsLib.GlobalWorkerOptions.workerSrc, '');
 });
 
 test('loads without pdfjsLib present', () => {
-  assert.doesNotThrow(() => loadPopup({ pdfjsLib: undefined }));
+  assert.doesNotThrow(() => loadPopup({ pdfjsLib: null }));
 });
 
 // ── Markierten Text lesen ──
@@ -163,7 +164,15 @@ test('file: .pdf pages are joined (items by space, pages by blank line)', async 
   await p.upload(fakeFile('doc.pdf', '%PDF-1.7'));
   assert.equal(p.runtimeMessages[0].text, 'Seite eins\n\nSeite zwei');
   assert.ok(pdfjsLib.calls[0].data instanceof ArrayBuffer || pdfjsLib.calls[0].data?.byteLength >= 0);
+  assert.equal(pdfjsLib.calls[0].isEvalSupported, false);
   assert.equal(p.closed, 1);
+});
+
+test('file: .pdf while the pdf.js module has not loaded reports an error', async () => {
+  const p = loadPopup({ pdfjsLib: null });
+  await p.upload(fakeFile('doc.pdf', '%PDF-1.7'));
+  assert.match(p.el['file-feedback'].textContent, /PDF-Bibliothek nicht geladen/);
+  assert.equal(p.runtimeMessages.length, 0);
 });
 
 test('file: .pdf without extractable text reports scan-PDF error', async () => {
