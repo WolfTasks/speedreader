@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1   # v7.1.0
+        with:
+          node-version: 24
+
+      # No npm / package.json by design — Node's built-in test runner only.
+      - name: Unit tests
+        run: node --test "tests/**/*.test.mjs"
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1   # v7.0.1
+
+      - name: Get version from manifest
+        id: version
+        run: |
+          VERSION=$(python3 -c "import json; print(json.load(open('manifest.json'))['version'])")
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Tag must match manifest version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          if [ "${GITHUB_REF_NAME}" != "v${{ steps.version.outputs.version }}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match manifest version ${{ steps.version.outputs.version }}"
+            exit 1
+          fi
+
+      - name: Create ZIP
+        run: |
+          zip -r "speedreader-${{ steps.version.outputs.version }}.zip" . \
+            -x ".git/*" \
+            -x ".github/*" \
+            -x ".gitea/*" \
+            -x ".idea/*" \
+            -x ".claude/*" \
+            -x "docs/*" \
+            -x "tests/*" \
+            -x "*.md" \
+            -x "portainer-stack.yml" \
+            -x "icons/generate-pngs.html" \
+            -x "icons/generate-icons.js" \
+            -x "icons/icon.svg"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9   # v7.0.2
+        with:
+          name: speedreader-${{ steps.version.outputs.version }}
+          path: speedreader-${{ steps.version.outputs.version }}.zip
+          retention-days: 30
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download ZIP
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333   # v8.0.2
+        with:
+          name: speedreader-${{ needs.build.outputs.version }}
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" "speedreader-${{ needs.build.outputs.version }}.zip" \
+            --repo "${GITHUB_REPOSITORY}" --title "${GITHUB_REF_NAME}" --generate-notes

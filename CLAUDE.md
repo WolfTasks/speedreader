@@ -8,7 +8,13 @@ A browser extension (Chrome/Firefox, Manifest V3) that reads text using RSVP —
 
 ## Running Tests
 
-Open `tests/reader-logic.html` directly in a browser (via `file://` or a local server). Results render in-page as green ✓ / red ✗. Tests use `console.assert()` and cover `reader-core.js` only.
+```bash
+node --test "tests/**/*.test.mjs"
+```
+
+Uses Node's built-in test runner (`node:test`) — still no npm/package.json. Covers `reader-core.js`, `background.js` and `content.js` (classic scripts run in a `vm` sandbox with a fake `chrome`/DOM from `tests/helpers/`), plus manifest/file-reference sanity checks. CI (`.github/workflows/ci.yml`) runs them on every push/PR, builds the extension ZIP, and on a `v*` tag matching `manifest.json`'s version publishes a GitHub release.
+
+`tests/reader-logic.html` is the older in-browser variant for `reader-core.js` (open via `file://`).
 
 Manual testing checklist: `docs/testing.md`
 
