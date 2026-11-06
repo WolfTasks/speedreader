@@ -2,30 +2,30 @@
   "$comment": "Inventory of vendored third-party files, checked nightly against OSV by .github/scripts/check-vendor-cves.mjs. sha256 is over the file content with CRLF normalized to LF (= the blob as stored in git). When you update a file in vendor/, update its entry here (package, version, sha256, versionMarker) in the same commit.",
   "files": [
     {
-      "file": "vendor/pdf.min.js",
+      "file": "vendor/pdf.min.mjs",
       "ecosystem": "npm",
       "package": "pdfjs-dist",
-      "version": "3.11.174",
-      "source": "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js",
-      "sha256": "5b5799e6f8c680663207ac5b42ee14eed2a406fa7af48f50c154f0c0b1566946",
-      "versionMarker": "\"3.11.174\""
+      "version": "6.4.299",
+      "source": "https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-6.4.299.tgz (build/pdf.min.mjs)",
+      "sha256": "57456c8e0c81e46be31174b499ef77f2b9f5ee46d04412ba627320a36755d4c2",
+      "versionMarker": "\"6.4.299\""
     },
     {
-      "file": "vendor/pdf.worker.min.js",
+      "file": "vendor/pdf.worker.min.mjs",
       "ecosystem": "npm",
       "package": "pdfjs-dist",
-      "version": "3.11.174",
-      "source": "https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js",
-      "sha256": "feabdf309770ed24bba31a5467836cdc8cf639c705af27d52b585b041bb8527b",
-      "versionMarker": "\"3.11.174\""
+      "version": "6.4.299",
+      "source": "https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-6.4.299.tgz (build/pdf.worker.min.mjs)",
+      "sha256": "9536359f1b8367850d485731ca1d5e45c159a7b7a0912325e539937aa21ceb18",
+      "versionMarker": "\"6.4.299\""
     },
     {
       "file": "vendor/mammoth.browser.min.js",
       "ecosystem": "npm",
       "package": "mammoth",
-      "version": "1.6.0",
-      "source": "https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js",
-      "sha256": "596ef52239e52d8ee3cee10b2ee4a72596abf900d0e4f468593f956e9f1809b0",
+      "version": "1.13.0",
+      "source": "https://registry.npmjs.org/mammoth/-/mammoth-1.13.0.tgz (mammoth.browser.min.js)",
+      "sha256": "92914a3708cfdf1e62cb553d1856a7fedab21da83d8ee82845de2f897b368cab",
       "versionMarker": null,
       "$comment": "The mammoth bundle embeds no version string; the version is pinned by sha256 (byte-identical to the published npm build)."
     },
