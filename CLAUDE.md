@@ -12,7 +12,9 @@ A browser extension (Chrome/Firefox, Manifest V3) that reads text using RSVP —
 node --test "tests/**/*.test.mjs"
 ```
 
-Uses Node's built-in test runner (`node:test`) — still no npm/package.json. Covers `reader-core.js`, `background.js` and `content.js` (classic scripts run in a `vm` sandbox with a fake `chrome`/DOM from `tests/helpers/`), plus manifest/file-reference sanity checks. CI (`.github/workflows/ci.yml`) runs them on every push/PR, builds the extension ZIP, and on a `v*` tag matching `manifest.json`'s version publishes a GitHub release.
+Uses Node's built-in test runner (`node:test`) — still no npm/package.json. Covers `reader-core.js`, `reader.js` (RSVP loop/controls, fake timers), `background.js`, `content.js`, `popup.js` and `popup/zip-guard.js` (classic scripts run in a `vm` sandbox with fake `chrome`/DOM helpers from `tests/helpers/`), plus manifest/file-reference sanity checks. CI (`.github/workflows/ci.yml`) runs them on every push/PR, builds the extension ZIP, and on a `v*` tag matching `manifest.json`'s version publishes a GitHub release.
+
+Nightly security scan (`.github/workflows/nightly-security.yml`): `vendor/VENDOR.json` inventories every vendored file (npm package, version, LF-normalized sha256); `.github/scripts/check-vendor-cves.mjs` verifies the inventory and queries OSV, plus Trivy secret/misconfig. **When updating anything in `vendor/`, update `VENDOR.json` in the same PR** (the scan fails on a stale inventory). Scanner tests: `node --test ".github/scripts/*.test.mjs"`.
 
 `tests/reader-logic.html` is the older in-browser variant for `reader-core.js` (open via `file://`).
 
@@ -34,6 +36,10 @@ background.js responds with stored text → reader.js tokenizes → RSVP loop st
 
 - **`reader-core.js` is a pure module** — no side effects, DOM, or chrome API calls. This is intentional for testability. Keep new logic here if it can be pure.
 - **`setTimeout` chain, not `setInterval`** — prevents timer backlog in the RSVP loop.
-- **Storage fallback** — session storage (Chrome 102+, Firefox 115+) with automatic fallback to local storage.
+- **Storage fallback** — session storage with fallback to local storage (session storage is quota-limited); pending text expires after 5 minutes (`PENDING_TTL_MS`) and stale local copies are purged on startup/install.
+- **Minimum browsers: Chrome 121 / Firefox 121** — `background` declares both `service_worker` (Chrome) and `scripts` (Firefox event page); older versions reject that combination.
+- **pdf.js is an ES module** (`vendor/pdf.min.mjs`) loaded via `popup/pdf-loader.mjs`, which exposes `pdfjsLib` for the classic `popup.js`; always call `getDocument` with `isEvalSupported: false`.
+- **Upload limits** — 20 MB per file; `.docx` additionally max 50 MB unpacked (`popup/zip-guard.js` reads the ZIP central directory; ZIP64/corrupt archives rejected).
+- **Message handlers only accept `sender.id === chrome.runtime.id`; picker handlers ignore untrusted (`!e.isTrusted`) events.**
 - **ORP calculation**: `floor(word.length × 0.3) - 1` (0-based index). Words ≥ 10 chars get 1.4× pause; sentence-ending punctuation (.!?) gets 2× pause.
 - **`<all_urls>` host permission** is required because the context menu reads selected text from arbitrary pages via the content script.
