@@ -21,7 +21,8 @@ function loadContent({ elements = {}, selection = '' } = {}) {
   };
   const window = { getSelection: () => ({ toString: () => selection }) };
   loadScript('content.js', { chrome, document, window });
-  const fire = (type, event) => docListeners[type]({ preventDefault() {}, stopPropagation() {}, ...event });
+  // Real user events are trusted; tests opt into isTrusted: false to simulate page-dispatched events
+  const fire = (type, event) => docListeners[type]({ isTrusted: true, preventDefault() {}, stopPropagation() {}, ...event });
   return { chrome, document, fire };
 }
 
@@ -119,4 +120,29 @@ test('READ_SELECTION: empty selection → EMPTY', async () => {
   const { chrome } = loadContent({ selection: '' });
   const resp = await sendRuntimeMessage(chrome, { type: 'READ_SELECTION' });
   assert.equal(resp.error, 'EMPTY');
+});
+
+test('picker: synthetic (untrusted) hover, click and Escape are ignored', async () => {
+  const { chrome, document, fire } = loadContent();
+  await sendRuntimeMessage(chrome, { type: 'ACTIVATE_PICKER' });
+  const el = fakeElement('injected');
+  fire('mouseover', { target: el, isTrusted: false });
+  assert.equal(el.style.outline, '');
+  fire('click', { target: el, isTrusted: false });
+  assert.equal(chrome.sentMessages.length, 0);
+  fire('keydown', { key: 'Escape', isTrusted: false });
+  assert.equal(document.body.style.cursor, 'crosshair', 'picker stays active');
+  fire('click', { target: fakeElement('echt') });
+  assert.equal(chrome.sentMessages[0].text, 'echt');
+});
+
+test('messages from other senders are rejected', async () => {
+  const { chrome, document } = loadContent({ selection: 'geheim', elements: { article: fakeElement('x') } });
+  const foreign = { id: 'other-extension' };
+  assert.equal(await sendRuntimeMessage(chrome, { type: 'ACTIVATE_PICKER' }, foreign), undefined);
+  assert.equal(document.body.style.cursor, '');
+  assert.equal(await sendRuntimeMessage(chrome, { type: 'READ_SELECTION' }, foreign), undefined);
+  assert.equal(await sendRuntimeMessage(chrome, { type: 'USE_SELECTOR', selector: 'article' }, foreign), undefined);
+  assert.equal(await sendRuntimeMessage(chrome, { type: 'READ_SELECTION' }, {}), undefined);
+  assert.equal(chrome.sentMessages.length, 0);
 });

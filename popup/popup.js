@@ -1,6 +1,8 @@
 // popup/popup.js
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+// Hard limits — files above these are rejected, not just warned about.
+const MAX_FILE_SIZE = 20 * 1024 * 1024;          // 20 MB on disk
+const MAX_DOCX_UNCOMPRESSED = 50 * 1024 * 1024;  // 50 MB unpacked (.docx zip-bomb guard)
 
 // DOM refs
 const btnSelection      = document.getElementById('btn-selection');
@@ -112,13 +114,13 @@ fileInput.addEventListener('change', async () => {
   }
 
   if (file.size > MAX_FILE_SIZE) {
-    const confirmed = window.confirm(
-      `Die Datei ist sehr groß (${(file.size / 1024 / 1024).toFixed(1)} MB).\nDas Laden kann dauern. Fortfahren?`
+    showFeedback(
+      fileFeedback,
+      `Datei zu groß (${formatMb(file.size)} MB). Maximal ${formatMb(MAX_FILE_SIZE)} MB erlaubt.`,
+      'error'
     );
-    if (!confirmed) {
-      fileInput.value = '';
-      return;
-    }
+    fileInput.value = '';
+    return;
   }
 
   showFeedback(fileFeedback, 'Wird geladen…', '');
@@ -144,7 +146,14 @@ async function parseFile(file, ext) {
   }
   if (ext === 'docx') {
     const buf = await readAsArrayBuffer(file);
-    const result = await mammoth.extractRawValue({ arrayBuffer: buf });
+    // getZipUncompressedSize: popup/zip-guard.js
+    const unpacked = getZipUncompressedSize(buf);
+    if (unpacked > MAX_DOCX_UNCOMPRESSED) {
+      throw new Error(
+        `.docx ist entpackt zu groß (${formatMb(unpacked)} MB, max. ${formatMb(MAX_DOCX_UNCOMPRESSED)} MB)`
+      );
+    }
+    const result = await mammoth.extractRawText({ arrayBuffer: buf });
     return result.value;
   }
   if (ext === 'pdf') {
@@ -152,6 +161,10 @@ async function parseFile(file, ext) {
     return extractPdfText(buf);
   }
   throw new Error('Unbekanntes Format');
+}
+
+function formatMb(bytes) {
+  return (bytes / 1024 / 1024).toFixed(1);
 }
 
 function readAsText(file) {

@@ -59,3 +59,15 @@ test('popup calls pdf.js with eval disabled', () => {
 test('permissions stay minimal', () => {
   assert.deepEqual([...manifest.permissions].sort(), ['contextMenus', 'storage']);
 });
+
+test('declares minimum browser versions that guarantee storage.session and dual background keys', () => {
+  assert.ok(Number(manifest.minimum_chrome_version) >= 121, 'Chrome < 121 rejects background.scripts in MV3');
+  const gecko = manifest.browser_specific_settings?.gecko;
+  assert.ok(gecko?.id, 'Firefox needs an explicit add-on id for MV3');
+  assert.ok(parseFloat(gecko.strict_min_version) >= 121, 'Firefox < 121 cannot handle service_worker next to scripts');
+});
+
+test('background runs as service worker (Chrome) and event page (Firefox) from the same file', () => {
+  assert.equal(manifest.background.service_worker, 'background.js');
+  assert.deepEqual([...manifest.background.scripts], ['background.js']);
+});
