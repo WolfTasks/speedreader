@@ -39,15 +39,17 @@ Run these tests after any significant change. Test in both Chrome and Firefox.
 
 ## Popup — File Upload (.txt)
 - [ ] Upload a .txt file → reader opens with content
-- [ ] Large .txt (>10 MB) → warning shown, still loads
+- [ ] File > 20 MB (any type) → error "Datei zu groß (… MB). Maximal 20.0 MB erlaubt.", reader does not open
 
 ## Popup — File Upload (.docx)
 - [ ] Upload a .docx file → reader opens with extracted text
 - [ ] Upload a .doc file → error "Bitte .docx verwenden" shown
+- [ ] .docx that unpacks to > 50 MB (zip bomb) or a corrupt .docx → readable error, popup stays responsive
 
 ## Popup — File Upload (.pdf)
 - [ ] Upload a text-based PDF → reader opens with extracted text
 - [ ] Upload a scan-only PDF (image PDF) → error about no extractable text shown
+- [ ] Popup DevTools console: no errors loading `pdf-loader.mjs` / module worker `pdf.worker.min.mjs`
 
 ## Reader — Edge Cases
 - [ ] Open reader tab directly (no text) → error banner shown
@@ -55,5 +57,5 @@ Run these tests after any significant change. Test in both Chrome and Firefox.
 - [ ] Text with emojis → displayed without crash
 
 ## Cross-Browser
-- [ ] All above tests pass in Chrome
-- [ ] All above tests pass in Firefox (115+)
+- [ ] All above tests pass in Chrome (121+), no manifest warnings on chrome://extensions
+- [ ] All above tests pass in Firefox (121+), background event page starts (about:debugging → Inspect)
