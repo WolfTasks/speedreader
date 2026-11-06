@@ -1,4 +1,4 @@
-// .github/scripts/check-vendor-cves.test.mjs — run with: node --test .github/scripts/
+// .github/scripts/check-vendor-cves.test.mjs — run with: node --test ".github/scripts/*.test.mjs"
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';

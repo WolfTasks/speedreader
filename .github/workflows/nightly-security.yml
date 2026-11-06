@@ -36,7 +36,7 @@ jobs:
           node-version: 24
 
       - name: Test the scanner
-        run: node --test .github/scripts/
+        run: node --test ".github/scripts/*.test.mjs"
 
       # Exit 1 = HIGH/CRITICAL (or unknown severity), 2 = stale inventory / OSV unreachable
       - name: Check vendored libraries against OSV
