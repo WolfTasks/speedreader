@@ -21,13 +21,16 @@
 </head>
 <body>
   <h1>Datenschutzerklärung – SpeedReader</h1>
-  <p><em>Stand: März 2026</em></p>
+  <p><em>Stand: November 2026 (Version 0.2.0)</em></p>
 
   <h2>Welche Daten werden erhoben?</h2>
   <p>SpeedReader erhebt <strong>keine persönlichen Daten</strong>. Die Extension überträgt keine Informationen an externe Server und führt keine Analyse des Nutzerverhaltens durch.</p>
 
   <h2>Wie wird Text verarbeitet?</h2>
-  <p>Text, den du zum Lesen auswählst (z.B. markierter Text, Datei-Inhalt), wird ausschließlich lokal in deinem Browser gespeichert — in <code>chrome.storage.session</code> oder <code>chrome.storage.local</code>. Er wird nach dem Laden im Reader gelöscht, nicht abgerufener Text wird nach spätestens 5 Minuten verworfen, und er verlässt deinen Computer niemals.</p>
+  <p>Text, den du zum Lesen auswählst (z.B. markierter Text, Datei-Inhalt), wird ausschließlich lokal in deinem Browser gespeichert — in <code>storage.session</code> oder <code>storage.local</code> der Extension-API. Er wird nach dem Laden im Reader gelöscht, nicht abgerufener Text wird nach spätestens 5 Minuten verworfen, und er verlässt deinen Computer niemals.</p>
+
+  <h2>Dateien</h2>
+  <p>Hochgeladene <code>.txt</code>-, <code>.docx</code>- und <code>.pdf</code>-Dateien werden vollständig lokal im Browser ausgelesen (mit den in der Extension mitgelieferten Bibliotheken pdf.js und mammoth). Es werden dabei keine Dateien oder Inhalte hochgeladen und keine Ressourcen aus dem Internet nachgeladen.</p>
 
   <h2>Berechtigungen</h2>
   <p>SpeedReader hat <strong>keinen dauerhaften Zugriff auf Webseiten</strong>. Erst wenn du die Extension auf einer Seite ausdrücklich aufrufst (Popup, Kontextmenü oder Tastenkürzel), erhält sie über <code>activeTab</code> vorübergehend Zugriff auf genau diesen Tab und lädt dort per <code>scripting</code> den Auswahl-/Picker-Code. Die Extension liest dabei ausschließlich den von dir explizit ausgewählten Text. Weitere Berechtigungen: <code>contextMenus</code> (Kontextmenü-Eintrag) und <code>storage</code> (kurzzeitige lokale Zwischenspeicherung des zu lesenden Texts).</p>
@@ -36,7 +39,7 @@
   <p>Es werden keine Drittanbieter-Dienste, Tracking-Bibliotheken oder Werbenetzwerke eingebunden.</p>
 
   <h2>Kontakt</h2>
-  <p>Bei Fragen zur Datenschutzerklärung kannst du ein Issue im Repository öffnen.</p>
+  <p>Bei Fragen zur Datenschutzerklärung kannst du ein Issue im <a href="https://github.com/WolfTasks/speedreader/issues">GitHub-Repository</a> öffnen.</p>
 
   <footer>SpeedReader ist Open Source.</footer>
 </body>
