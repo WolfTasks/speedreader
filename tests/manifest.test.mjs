@@ -87,3 +87,15 @@ test('background runs as service worker (Chrome) and event page (Firefox) from t
   assert.equal(manifest.background.service_worker, 'background.js');
   assert.deepEqual([...manifest.background.scripts], ['background.js']);
 });
+
+test('declares Firefox built-in data consent: collects no data (AMO requirement for new add-ons)', () => {
+  // Firefox 140+ / Android 142+ show this in the install prompt; older versions ignore the key
+  // (addons-linter: warning only, because strict_min_version is 121).
+  const dcp = manifest.browser_specific_settings?.gecko?.data_collection_permissions;
+  assert.deepEqual(dcp, { required: ['none'] }, 'SpeedReader transmits nothing — keep required: ["none"] and no optional');
+});
+
+test('ships a LICENSE file in the repo root (packaged into the release ZIP)', () => {
+  assert.ok(existsSync(ROOT + 'LICENSE'), 'missing: LICENSE');
+  assert.match(readFileSync(ROOT + 'LICENSE', 'utf8'), /^MIT License/);
+});

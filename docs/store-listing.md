@@ -1,6 +1,6 @@
 # SpeedReader — Store-Listing (Chrome Web Store & Firefox AMO)
 
-Stand: v0.2.0 (`manifest.json`: `activeTab`, `contextMenus`, `scripting`, `storage`; keine Host-Berechtigungen, keine `content_scripts`).
+Stand: v0.2.1 (`manifest.json`: `activeTab`, `contextMenus`, `scripting`, `storage`; keine Host-Berechtigungen, keine `content_scripts`).
 
 Privacy-Policy-URL (GitHub Pages aus `main` → `/docs`): **https://wolftasks.github.io/speedreader/privacy-policy.html**
 
@@ -91,11 +91,11 @@ Vorhanden im Repo: `icons/icon-16.png`, `icon-48.png`, `icon-128.png` (128×128,
 
 AMO verlangt Quellcode nur, wenn Code minifiziert, gebündelt oder generiert ist. SpeedReader hat **keinen Build-Schritt**: der eigene Code (`background.js`, `content.js`, `popup/`, `reader/`) liegt unverändert und lesbar im ZIP. Minifiziert sind ausschließlich **unveränderte** Drittanbieter-Bibliotheken in `vendor/`; diese sind in `vendor/VENDOR.json` mit npm-Paket, Version, Quelle und sha256 inventarisiert.
 
-→ Bei der Frage "Do you use code generators, minifiers, …?" **No** wählen (bzw. falls AMO wegen der `.min`-Dateien nachfragt: auf die Reviewer-Notes verweisen). Ein Source-ZIP ist nicht nötig; falls doch angefordert, genügt der Git-Tag `v0.2.0` als ZIP von GitHub.
+→ Bei der Frage "Do you use code generators, minifiers, …?" **No** wählen (bzw. falls AMO wegen der `.min`-Dateien nachfragt: auf die Reviewer-Notes verweisen). Ein Source-ZIP ist nicht nötig; falls doch angefordert, genügt der Git-Tag `v0.2.1` als ZIP von GitHub.
 
 ### Notes to Reviewer (in das Feld "Notes to Reviewer" kopieren)
 
-> No build step: all first-party code (background.js, content.js, popup/, reader/) is shipped as-is and unminified. Source: https://github.com/WolfTasks/speedreader (tag v0.2.0).
+> No build step: all first-party code (background.js, content.js, popup/, reader/) is shipped as-is and unminified. Source: https://github.com/WolfTasks/speedreader (MIT license, tag v0.2.1).
 >
 > The only minified files are unmodified third-party libraries, byte-identical to the published npm builds (sha256 over LF-normalized content, also listed in vendor/VENDOR.json):
 >
@@ -108,9 +108,13 @@ AMO verlangt Quellcode nur, wenn Code minifiziert, gebündelt oder generiert ist
 >
 > How to test: select text on any web page → right-click → "Mit SpeedReader lesen" (or open the toolbar popup → "Markierten Text lesen"). A reader tab opens; Space toggles play/pause.
 
-### Data-Collection-Angabe (offen)
+### Data-Collection-Angabe
 
-Neue AMO-Einreichungen verlangen seit Ende 2025 die Angabe `browser_specific_settings.gecko.data_collection_permissions` im Manifest (für SpeedReader: `{"required": ["none"]}`). v0.2.0 enthält diese Angabe **noch nicht** → vor der AMO-Einreichung Manifest ergänzen und als Patch-Release (z. B. v0.2.1) taggen; Chrome ignoriert den Schlüssel.
+Neue AMO-Einreichungen verlangen seit 3. November 2025 `browser_specific_settings.gecko.data_collection_permissions`. Ab **v0.2.1** steht im Manifest `{"required": ["none"]}`. Firefox 140+ und Android 142+ zeigen das im Installationsdialog, ältere Versionen ignorieren den Schlüssel. Der AMO-Validator meldet dazu nur Warnungen wegen `strict_min_version` 121. Chrome ignoriert `browser_specific_settings`.
+
+### Lizenz
+
+**MIT** (`LICENSE` im Repo-Root, ab v0.2.1 auch im Release-ZIP) → im AMO-Formular "MIT License" auswählen.
 
 ---
 
@@ -118,7 +122,7 @@ Neue AMO-Einreichungen verlangen seit Ende 2025 die Angabe `browser_specific_set
 
 - [ ] GitHub Pages aktivieren (Branch `main`, Ordner `/docs`) und https://wolftasks.github.io/speedreader/privacy-policy.html aufrufen
 - [ ] Developer-Account anlegen: https://chrome.google.com/webstore/devconsole ($5 Einmalgebühr, 2-Faktor-Auth nötig)
-- [ ] ZIP aus dem GitHub Release v0.2.0 herunterladen (`speedreader-0.2.0.zip`)
+- [ ] ZIP aus dem GitHub Release v0.2.1 herunterladen (`speedreader-0.2.1.zip`)
 - [ ] Neues Element anlegen → ZIP hochladen
 - [ ] Store listing: Kurz- und Langbeschreibung, Kategorie, Sprache Deutsch
 - [ ] Store-Icon, Screenshots (≥1), Small promo tile hochladen
@@ -128,10 +132,10 @@ Neue AMO-Einreichungen verlangen seit Ende 2025 die Angabe `browser_specific_set
 
 ## Einreichungs-Checkliste — Firefox AMO
 
-- [ ] `data_collection_permissions` im Manifest ergänzen + Patch-Release (siehe oben)
+- [ ] Release v0.2.1 getaggt (enthält `data_collection_permissions` und `LICENSE`)
 - [ ] Account auf https://addons.mozilla.org/developers/ anlegen
 - [ ] "Submit a New Add-on" → "On this site" (gelistet) → Release-ZIP hochladen, Validator-Warnungen prüfen
 - [ ] Quellcode-Frage: No (siehe oben); Notes to Reviewer einfügen
-- [ ] Name, Summary, Beschreibung, Kategorie, Lizenz, Privacy-Policy (URL oder Text), Support-URL `https://github.com/WolfTasks/speedreader/issues`
+- [ ] Name, Summary, Beschreibung, Kategorie, Lizenz **MIT**, Privacy-Policy (URL oder Text), Support-URL `https://github.com/WolfTasks/speedreader/issues`
 - [ ] Screenshots hochladen
 - [ ] Einreichen
