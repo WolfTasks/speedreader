@@ -21,12 +21,13 @@ RSVP (Rapid Serial Visual Presentation) ist eine bewährte Lese­technik: Jedes 
 
 **Funktionen:**
 
-- Markierten Text auf jeder Webseite sofort vorlesen lassen (Rechtsklick → Kontextmenü)
+- Markierten Text auf jeder Webseite sofort lesen (Rechtsklick → Kontextmenü, Popup oder Tastenkürzel Alt+Shift+R)
 - Texte aus `.txt`-, `.docx`- und `.pdf`-Dateien direkt im Browser öffnen
 - Einzelne Seiten­elemente per Klick oder CSS-Selektor auswählen
 - Lese­geschwindigkeit von 100 bis 800 Wörtern pro Minute stufenlos einstellen
 - Optimaler Erkennungs­punkt (ORP): Der wichtigste Buchstabe jedes Worts wird rot hervorgehoben, damit dein Gehirn das Wort schneller erfasst
 - Tastatur­steuerung: Leertaste für Play/Pause
+- Kein dauerhafter Zugriff auf Webseiten: SpeedReader wird nur auf dem Tab aktiv, auf dem du es ausdrücklich aufrufst
 
 **Datenschutz:**
 SpeedReader speichert Text ausschließlich lokal in deinem Browser und überträgt nichts an externe Server.
@@ -58,7 +59,7 @@ SpeedReader speichert Text ausschließlich lokal in deinem Browser und überträ
 ## Einreichungs-Checkliste
 
 - [ ] Developer-Account anlegen: https://chrome.google.com/webstore/devconsole ($5 Einmalgebühr)
-- [ ] ZIP aus dem Gitea Workflow-Artifact herunterladen
+- [ ] ZIP aus dem GitHub Release (bzw. dem Artifact des CI-Workflows) herunterladen
 - [ ] Neue Extension anlegen → ZIP hochladen
 - [ ] Kurzbezeichnung eintragen (Short description)
 - [ ] Ausführliche Beschreibung eintragen
