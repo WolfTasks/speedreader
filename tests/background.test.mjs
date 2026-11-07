@@ -121,3 +121,62 @@ test('browser startup and install purge stale local text but keep fresh text', a
   await flush();
   assert.equal(chrome.storage.local.data.pendingText.text, 'frisch');
 });
+
+// ── Keyboard command (activeTab + scripting) ──
+
+test('read-selection command injects a function into the tab and opens the reader with its result', async () => {
+  const chrome = loadBackground({ inject: () => 'Per Tastenkürzel' });
+  chrome.commands.onCommand.dispatch('read-selection', { id: 42 });
+  await flush();
+  await flush();
+  assert.equal(chrome.scripting.injections.length, 1);
+  const details = chrome.scripting.injections[0];
+  assert.equal(details.target.tabId, 42);
+  assert.equal(typeof details.func, 'function');
+  assert.equal(details.files, undefined, 'only a one-off function, no content script file');
+  assert.equal(chrome.storage.session.data.pendingText.text, 'Per Tastenkürzel');
+  assert.equal(chrome.createdTabs.length, 1);
+});
+
+test('injected selection function reads and trims window.getSelection()', async () => {
+  const chrome = loadBackground();
+  chrome.commands.onCommand.dispatch('read-selection', { id: 1 });
+  await flush();
+  const { func } = chrome.scripting.injections[0];
+  // Run it in a page-like scope: executeScript serializes the function, so it must not use closures.
+  const fn = new Function('window', `return (${func.toString()})();`);
+  assert.equal(fn({ getSelection: () => ({ toString: () => '  Auswahl ' }) }), 'Auswahl');
+  assert.equal(fn({ getSelection: () => null }), '');
+});
+
+test('read-selection command with empty selection opens nothing', async () => {
+  const chrome = loadBackground({ inject: () => '' });
+  chrome.commands.onCommand.dispatch('read-selection', { id: 42 });
+  await flush();
+  await flush();
+  assert.equal(chrome.createdTabs.length, 0);
+});
+
+test('read-selection command on a restricted page fails quietly', async () => {
+  const chrome = loadBackground({ inject: () => { throw new Error('Cannot access a chrome:// URL'); } });
+  const warn = console.warn;
+  const warnings = [];
+  console.warn = (...args) => warnings.push(args);
+  try {
+    chrome.commands.onCommand.dispatch('read-selection', { id: 42 });
+    await flush();
+    await flush();
+  } finally {
+    console.warn = warn;
+  }
+  assert.equal(chrome.createdTabs.length, 0);
+  assert.equal(warnings.length, 1);
+});
+
+test('other commands or commands without a tab are ignored', async () => {
+  const chrome = loadBackground({ inject: () => 'x' });
+  chrome.commands.onCommand.dispatch('something-else', { id: 1 });
+  chrome.commands.onCommand.dispatch('read-selection', undefined);
+  await flush();
+  assert.equal(chrome.scripting.injections.length, 0);
+});

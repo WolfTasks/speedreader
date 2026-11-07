@@ -61,6 +61,43 @@ test('selection: previous error is cleared on a new attempt', async () => {
   assert.equal(p.el['global-status'].textContent, '');
 });
 
+// ── On-demand injection (activeTab + scripting) ──
+
+test('every page action first injects content.js into the active tab, then messages it', async () => {
+  for (const act of [
+    (p) => p.el['btn-selection'].fire('click'),
+    (p) => p.el['btn-picker'].fire('click'),
+    (p) => { p.el['selector-input'].value = 'article'; return p.el['btn-selector'].fire('click'); },
+  ]) {
+    const p = loadPopup();
+    await act(p);
+    assert.deepEqual(plain(p.injections), [{ target: { tabId: 7 }, files: ['content.js'] }]);
+    assert.deepEqual(p.calls, ['inject', 'message']);
+  }
+});
+
+test('restricted page (injection refused) → specific error, no message sent, popup stays open', async () => {
+  const restricted = 'Auf dieser Seite nicht verfügbar (geschützte Browser-Seite).';
+  for (const act of [
+    (p) => p.el['btn-selection'].fire('click'),
+    (p) => p.el['btn-picker'].fire('click'),
+    (p) => { p.el['selector-input'].value = 'article'; return p.el['btn-selector'].fire('click'); },
+  ]) {
+    const p = loadPopup({ injectError: new Error('Cannot access a chrome:// URL') });
+    await act(p);
+    assert.equal(p.el['global-status'].textContent, restricted);
+    assert.equal(p.el['global-status'].hidden, false);
+    assert.equal(p.tabMessages.length, 0);
+    assert.equal(p.closed, 0);
+  }
+});
+
+test('no active tab → nothing is injected', async () => {
+  const p = loadPopup({ tab: null });
+  await p.el['btn-picker'].fire('click');
+  assert.equal(p.injections.length, 0);
+});
+
 // ── Element-Picker ──
 
 test('picker: sends ACTIVATE_PICKER and closes popup', async () => {

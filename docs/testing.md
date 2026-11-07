@@ -6,6 +6,19 @@ Run these tests after any significant change. Test in both Chrome and Firefox.
 - [ ] Load extension unpacked (Chrome: chrome://extensions, Firefox: about:debugging)
 - [ ] No errors shown in extension list
 
+## Permissions / On-Demand Injection (activeTab)
+- [ ] Extension details show **no** "read and change all your data on all websites" / "Zugriff auf alle Websites" warning (only activeTab-style access)
+- [ ] Open a page and use popup → picker / selector / selection works **without** reloading the page after installing the extension
+- [ ] Use picker, then selector, then selection on the same page (popup reopened each time) → each action triggers exactly one reader tab (no double injection)
+- [ ] Restricted pages → popup button shows "Auf dieser Seite nicht verfügbar (geschützte Browser-Seite).": Chrome `chrome://extensions`, Chrome Web Store; Firefox `about:addons`, addons.mozilla.org, built-in PDF viewer
+- [ ] Chrome PDF viewer tab: popup actions fail gracefully (restricted message or "Kein Text ausgewählt."), no uncaught error
+- [ ] Firefox: no host permission prompt / "Zugriff auf Website-Daten" needed for picker & selector (activeTab granted by opening the popup)
+
+## Keyboard Shortcut (background.js)
+- [ ] Select text, press Alt+Shift+R → reader tab opens with the selection (check/assign in chrome://extensions/shortcuts or about:addons → Manage Extension Shortcuts)
+- [ ] Alt+Shift+R without selection → nothing happens
+- [ ] Alt+Shift+R on a restricted page → nothing happens, background console shows a single warning
+
 ## Context Menu (background.js)
 - [ ] Select text on a webpage
 - [ ] Right-click → "Mit SpeedReader lesen" appears

@@ -18,7 +18,7 @@ test('every file referenced by the manifest exists', () => {
     manifest.action.default_popup,
     ...Object.values(manifest.icons),
     ...Object.values(manifest.action.default_icon),
-    ...manifest.content_scripts.flatMap((cs) => cs.js ?? []),
+    'content.js', // injected on demand by popup.js (no manifest content_scripts)
   ];
   for (const file of files) {
     assert.ok(existsSync(ROOT + file), `missing: ${file}`);
@@ -56,8 +56,24 @@ test('popup calls pdf.js with eval disabled', () => {
   assert.match(popup, /getDocument\(\{[^}]*isEvalSupported:\s*false/);
 });
 
-test('permissions stay minimal', () => {
-  assert.deepEqual([...manifest.permissions].sort(), ['contextMenus', 'storage']);
+test('permissions stay minimal: activeTab + on-demand scripting, no host access', () => {
+  assert.deepEqual([...manifest.permissions].sort(), ['activeTab', 'contextMenus', 'scripting', 'storage']);
+  assert.equal(manifest.host_permissions, undefined, 'no host permissions (security audit M2)');
+  assert.equal(manifest.optional_host_permissions, undefined);
+  assert.equal(manifest.content_scripts, undefined, 'content.js must be injected on demand, not on every page');
+});
+
+test('popup injects exactly the content script file that exists', () => {
+  const popup = readFileSync(ROOT + 'popup/popup.js', 'utf8');
+  const m = popup.match(/const CONTENT_SCRIPT = '([^']+)'/);
+  assert.ok(m, 'popup.js declares CONTENT_SCRIPT');
+  assert.ok(existsSync(ROOT + m[1]), `missing: ${m[1]}`);
+});
+
+test('keyboard command for reading the selection is declared', () => {
+  const cmd = manifest.commands?.['read-selection'];
+  assert.ok(cmd?.description, 'command needs a description (shown in browser shortcut settings)');
+  assert.match(cmd.suggested_key?.default ?? '', /^(Alt|Ctrl)\+Shift\+[A-Z]$/);
 });
 
 test('declares minimum browser versions that guarantee storage.session and dual background keys', () => {

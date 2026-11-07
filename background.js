@@ -26,6 +26,12 @@ chrome.contextMenus.onClicked.addListener((info) => {
   }
 });
 
+// Keyboard shortcut (manifest "commands"): invoking it grants activeTab for the current tab,
+// so the selection can be read with a one-off injected function — no host permission needed.
+chrome.commands?.onCommand.addListener((command, tab) => {
+  if (command === 'read-selection' && tab?.id) readSelectionFromTab(tab.id);
+});
+
 // Message listener — only accept messages from this extension's own pages and content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (sender?.id !== chrome.runtime.id) return false;
@@ -47,6 +53,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // ── Helpers ──
+
+async function readSelectionFromTab(tabId) {
+  let text = '';
+  try {
+    const [injection] = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: () => (window.getSelection()?.toString() || '').trim(),
+    });
+    text = typeof injection?.result === 'string' ? injection.result : '';
+  } catch (err) {
+    // Restricted page (chrome://, about:, store pages, built-in PDF viewer, …): nothing to read.
+    console.warn('SpeedReader: cannot read selection on this page:', err?.message);
+    return;
+  }
+  if (text) await openReader(text);
+}
 
 async function openReader(text) {
   await storePendingText(text);

@@ -2,6 +2,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createFakeChrome, sendRuntimeMessage } from './helpers/fake-chrome.mjs';
+import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
 import { loadScript } from './helpers/load-script.mjs';
 
 function fakeElement(innerText = '') {
@@ -20,10 +22,12 @@ function loadContent({ elements = {}, selection = '' } = {}) {
     },
   };
   const window = { getSelection: () => ({ toString: () => selection }) };
-  loadScript('content.js', { chrome, document, window });
+  const context = loadScript('content.js', { chrome, document, window });
   // Real user events are trusted; tests opt into isTrusted: false to simulate page-dispatched events
   const fire = (type, event) => docListeners[type]({ isTrusted: true, preventDefault() {}, stopPropagation() {}, ...event });
-  return { chrome, document, fire };
+  // Re-run content.js in the same isolated world, as a repeated executeScript does
+  const injectAgain = () => vm.runInContext(readFileSync(new URL('../content.js', import.meta.url), 'utf8'), context);
+  return { chrome, document, fire, docListeners, injectAgain };
 }
 
 test('ACTIVATE_PICKER switches to crosshair cursor and answers ok', async () => {
@@ -145,4 +149,23 @@ test('messages from other senders are rejected', async () => {
   assert.equal(await sendRuntimeMessage(chrome, { type: 'USE_SELECTOR', selector: 'article' }, foreign), undefined);
   assert.equal(await sendRuntimeMessage(chrome, { type: 'READ_SELECTION' }, {}), undefined);
   assert.equal(chrome.sentMessages.length, 0);
+});
+
+test('repeated injection is a no-op: no duplicate listeners, picker state survives', async () => {
+  const { chrome, document, fire, injectAgain } = loadContent({ selection: 'einmal' });
+  let added = 0;
+  const orig = document.addEventListener;
+  document.addEventListener = (...args) => { added++; return orig.apply(document, args); };
+  await sendRuntimeMessage(chrome, { type: 'ACTIVATE_PICKER' });
+  assert.doesNotThrow(injectAgain);
+  assert.doesNotThrow(injectAgain);
+  assert.equal(added, 0, 'no listeners registered by re-injection');
+  assert.equal(chrome.runtime.onMessage.listeners.length, 1);
+  assert.equal(document.body.style.cursor, 'crosshair');
+  fire('click', { target: fakeElement('genau einmal') });
+  assert.deepEqual(chrome.sentMessages.map((m) => m.text), ['genau einmal']);
+
+  const resp = await sendRuntimeMessage(chrome, { type: 'READ_SELECTION' });
+  assert.equal(resp.ok, true);
+  assert.equal(chrome.sentMessages.length, 2, 'one READ_TEXT per request');
 });

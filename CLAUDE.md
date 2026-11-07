@@ -25,7 +25,8 @@ Manual testing checklist: `docs/testing.md`
 ### Data Flow
 
 ```
-User (4 sources: selection, element picker, CSS selector, file upload)
+User (4 sources: selection [context menu / popup / Alt+Shift+R], element picker, CSS selector, file upload)
+    ↓ popup: chrome.scripting.executeScript(content.js) into the active tab (activeTab), then tabs.sendMessage
     ↓ chrome.runtime.sendMessage({ type: "READ_TEXT", text })
 background.js → chrome.storage.session.set (fallback: local) → chrome.tabs.create(reader.html)
     ↓ reader.js sends READER_READY message
@@ -42,4 +43,4 @@ background.js responds with stored text → reader.js tokenizes → RSVP loop st
 - **Upload limits** — 20 MB per file; `.docx` additionally max 50 MB unpacked (`popup/zip-guard.js` reads the ZIP central directory; ZIP64/corrupt archives rejected).
 - **Message handlers only accept `sender.id === chrome.runtime.id`; picker handlers ignore untrusted (`!e.isTrusted`) events.**
 - **ORP calculation**: `floor(word.length × 0.3) - 1` (0-based index). Words ≥ 10 chars get 1.4× pause; sentence-ending punctuation (.!?) gets 2× pause.
-- **`<all_urls>` host permission** is required because the context menu reads selected text from arbitrary pages via the content script.
+- **No host permissions, no manifest `content_scripts`** (security audit M2): permissions are `activeTab` + `scripting` (+ `contextMenus`, `storage`). `content.js` is injected on demand by `popup.js` (`chrome.scripting.executeScript({ files: ['content.js'] })`) right before each picker/selector/selection message; the user opening the popup grants `activeTab`. `content.js` is wrapped in an IIFE guarded by `globalThis.__speedreaderContentLoaded` so repeated injection never registers listeners twice. The context menu needs no injection (`info.selectionText`); the `read-selection` keyboard command (Alt+Shift+R) injects a one-off `func`. Injection failures (chrome://, about:, Web Store / addons.mozilla.org, built-in PDF viewer) surface as "Auf dieser Seite nicht verfügbar" in the popup and are ignored for the command. Firefox MV3 treats host permissions as opt-in anyway; `activeTab` is granted there by the same user gestures. Don't reintroduce `<all_urls>`.
