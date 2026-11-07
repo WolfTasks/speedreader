@@ -21,7 +21,24 @@ function createStorageArea({ broken = false } = {}) {
   };
 }
 
-export function createFakeChrome({ sessionBroken = false } = {}) {
+/**
+ * scripting.executeScript stand-in. `inject` decides the outcome per call: a function
+ * (details) => result value (wrapped as [{ frameId: 0, result }]) or throwing to simulate a
+ * restricted page; without `inject` every call yields an undefined result.
+ */
+function createScripting(inject) {
+  const injections = [];
+  return {
+    injections,
+    async executeScript(details) {
+      injections.push(details);
+      const result = inject ? inject(details) : undefined;
+      return [{ frameId: 0, result }];
+    },
+  };
+}
+
+export function createFakeChrome({ sessionBroken = false, inject } = {}) {
   const createdTabs = [];
   const createdMenus = [];
   const sentMessages = [];
@@ -44,6 +61,10 @@ export function createFakeChrome({ sessionBroken = false } = {}) {
     tabs: {
       create: (opts) => { createdTabs.push(opts); },
     },
+    commands: {
+      onCommand: createEvent(),
+    },
+    scripting: createScripting(inject),
     storage: {
       session: createStorageArea({ broken: sessionBroken }),
       local: createStorageArea(),

@@ -16,11 +16,10 @@
     "128": "icons/icon-128.png"
   },
   "permissions": [
+    "activeTab",
     "contextMenus",
+    "scripting",
     "storage"
-  ],
-  "host_permissions": [
-    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js",
@@ -28,17 +27,14 @@
       "background.js"
     ]
   },
-  "content_scripts": [
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "vendor/browser-polyfill.min.js",
-        "content.js"
-      ]
+  "commands": {
+    "read-selection": {
+      "suggested_key": {
+        "default": "Alt+Shift+R"
+      },
+      "description": "Markierten Text mit SpeedReader lesen"
     }
-  ],
+  },
   "action": {
     "default_popup": "popup/popup.html",
     "default_title": "SpeedReader",

@@ -33,10 +33,13 @@ SpeedReader speichert Text ausschließlich lokal in deinem Browser und überträ
 
 ---
 
-## Begründung für die `<all_urls>`-Berechtigung
-*(Im Submission-Formular in das Feld "Single-purpose justification" eintragen)*
+## Begründung der Berechtigungen
+*(Im Submission-Formular in die Felder "Permission justification" eintragen — es gibt **keine** Host-Berechtigungen und kein `<all_urls>` mehr)*
 
-The extension injects a content script to capture selected text and activated element text from any webpage the user is viewing. Access to all URLs is required because the user can invoke the reader on any website.
+- **activeTab**: Only when the user explicitly invokes SpeedReader (toolbar popup, context menu, or the keyboard shortcut) does the extension get temporary access to the current tab, to read the text the user selected or picked. No access to any other tab or site.
+- **scripting**: Used together with activeTab to inject the element picker / CSS selector / selection reader into the current tab on demand, at the moment the user clicks a popup button or presses the shortcut. No script runs on pages the user has not invoked the extension on.
+- **contextMenus**: Adds the "Mit SpeedReader lesen" entry for selected text.
+- **storage**: Temporarily stores the text to be read (session storage, local fallback) until the reader tab has loaded it; discarded after at most 5 minutes.
 
 ---
 

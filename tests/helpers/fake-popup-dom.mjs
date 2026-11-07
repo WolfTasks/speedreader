@@ -91,6 +91,7 @@ export function fakeMammoth(text = '') {
 /**
  * Load popup.js with fakes. contentResponse: value or function(message) returned by
  * chrome.tabs.sendMessage; set tab to null to simulate no active tab.
+ * injectError: Error thrown by chrome.scripting.executeScript (restricted page).
  * pdfjsLib: null = global absent (pdf-loader.mjs module not loaded yet).
  */
 export function loadPopup({
@@ -99,6 +100,7 @@ export function loadPopup({
   pdfjsLib = fakePdfjs(),
   mammoth = fakeMammoth(),
   confirmResult = true,
+  injectError = null,
 } = {}) {
   const ids = [
     'btn-selection', 'btn-picker', 'selector-input', 'btn-selector',
@@ -108,6 +110,8 @@ export function loadPopup({
   const fileLabel = fakeElement('file-label');
 
   const tabMessages = [];
+  const injections = [];
+  const calls = []; // ordered log of 'inject' / 'message'
   const runtimeMessages = [];
   const confirms = [];
   let closed = 0;
@@ -120,8 +124,17 @@ export function loadPopup({
     tabs: {
       query: async () => (tab ? [tab] : []),
       sendMessage: async (tabId, message) => {
+        calls.push('message');
         tabMessages.push({ tabId, message });
         return typeof contentResponse === 'function' ? contentResponse(message) : contentResponse;
+      },
+    },
+    scripting: {
+      executeScript: async (details) => {
+        calls.push('inject');
+        injections.push(details);
+        if (injectError) throw injectError;
+        return [{ frameId: 0, result: undefined }];
       },
     },
   };
@@ -148,6 +161,8 @@ export function loadPopup({
     pdfjsLib,
     mammoth,
     tabMessages,
+    injections,
+    calls,
     runtimeMessages,
     confirms,
     get closed() { return closed; },

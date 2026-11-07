@@ -4,6 +4,9 @@
 const MAX_FILE_SIZE = 20 * 1024 * 1024;          // 20 MB on disk
 const MAX_DOCX_UNCOMPRESSED = 50 * 1024 * 1024;  // 50 MB unpacked (.docx zip-bomb guard)
 
+// Injected on demand into the active tab (path relative to the extension root).
+const CONTENT_SCRIPT = 'content.js';
+
 // DOM refs
 const btnSelection      = document.getElementById('btn-selection');
 const btnPicker         = document.getElementById('btn-picker');
@@ -25,10 +28,31 @@ async function getActiveTab() {
   return tab;
 }
 
+// Thrown when the browser refuses script injection (chrome://, about:, Web Store / addons.mozilla.org,
+// built-in PDF viewer, other extensions' pages, …).
+class RestrictedPageError extends Error {}
+
+// No content script is registered globally: opening the popup grants activeTab for the current tab,
+// and content.js is injected only now. content.js guards against running twice in the same page.
 async function sendToContent(message) {
   const tab = await getActiveTab();
   if (!tab?.id) throw new Error('no-tab');
+  try {
+    await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: [CONTENT_SCRIPT] });
+  } catch (err) {
+    throw new RestrictedPageError(err?.message);
+  }
   return chrome.tabs.sendMessage(tab.id, message);
+}
+
+function showPageError(err) {
+  showFeedback(
+    globalStatus,
+    err instanceof RestrictedPageError
+      ? 'Auf dieser Seite nicht verfügbar (geschützte Browser-Seite).'
+      : 'Seite nicht zugänglich.',
+    'error'
+  );
 }
 
 function showFeedback(el, msg, type) {
@@ -54,8 +78,8 @@ btnSelection.addEventListener('click', async () => {
     } else {
       window.close();
     }
-  } catch {
-    showFeedback(globalStatus, 'Seite nicht zugänglich.', 'error');
+  } catch (err) {
+    showPageError(err);
   }
 });
 
@@ -64,8 +88,8 @@ btnPicker.addEventListener('click', async () => {
   try {
     await sendToContent({ type: 'ACTIVATE_PICKER' });
     window.close();
-  } catch {
-    showFeedback(globalStatus, 'Seite nicht zugänglich.', 'error');
+  } catch (err) {
+    showPageError(err);
   }
 });
 
@@ -87,8 +111,8 @@ async function loadBySelector() {
     } else {
       window.close();
     }
-  } catch {
-    showFeedback(globalStatus, 'Seite nicht zugänglich.', 'error');
+  } catch (err) {
+    showPageError(err);
   }
 }
 

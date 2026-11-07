@@ -30,7 +30,7 @@
   <p>Text, den du zum Lesen auswählst (z.B. markierter Text, Datei-Inhalt), wird ausschließlich lokal in deinem Browser gespeichert — in <code>chrome.storage.session</code> oder <code>chrome.storage.local</code>. Er wird nach dem Laden im Reader gelöscht, nicht abgerufener Text wird nach spätestens 5 Minuten verworfen, und er verlässt deinen Computer niemals.</p>
 
   <h2>Berechtigungen</h2>
-  <p>SpeedReader benötigt Zugriff auf alle Webseiten (<code>&lt;all_urls&gt;</code>), damit du auf jeder beliebigen Seite Text markieren und mit dem Reader öffnen kannst. Die Extension liest dabei ausschließlich den von dir explizit ausgewählten Text.</p>
+  <p>SpeedReader hat <strong>keinen dauerhaften Zugriff auf Webseiten</strong>. Erst wenn du die Extension auf einer Seite ausdrücklich aufrufst (Popup, Kontextmenü oder Tastenkürzel), erhält sie über <code>activeTab</code> vorübergehend Zugriff auf genau diesen Tab und lädt dort per <code>scripting</code> den Auswahl-/Picker-Code. Die Extension liest dabei ausschließlich den von dir explizit ausgewählten Text. Weitere Berechtigungen: <code>contextMenus</code> (Kontextmenü-Eintrag) und <code>storage</code> (kurzzeitige lokale Zwischenspeicherung des zu lesenden Texts).</p>
 
   <h2>Drittanbieter</h2>
   <p>Es werden keine Drittanbieter-Dienste, Tracking-Bibliotheken oder Werbenetzwerke eingebunden.</p>
